@@ -9,10 +9,13 @@ class Edge;
 
 class Graph {
 
+    friend class CustomOpenGLWidget;
+
 private:
     //PROPERTIES
     std::map<long, Vertex*> vertices;
     std::vector<Edge*> edges;
+    double maxX, maxY, minX, minY;
 
     bool isNormalized;
     //END OF PROPERTIES
@@ -21,6 +24,8 @@ private:
     void read_vertices(const std::string &filename);
     void read_edges(const std::string &filename);
     void normalize();
+    float* getEdgesPreparedToDraw() const;
+    void checkForMaxMin(Vertex &v);
 
     Vertex& get_vertex_by_id(long id);
     //END OF METHODS

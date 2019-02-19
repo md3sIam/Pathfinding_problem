@@ -59,10 +59,12 @@ std::string Vertex::get_info() {
 
 Vertex* Vertex::get_vertex_from_csv_string(const std::string &str) {
     std::vector<std::string> vector = CSVUtil::parse_to_strings(str);
+    CSVUtil::csv_to_cpp_fp(vector[1]);
+    CSVUtil::csv_to_cpp_fp(vector[2]);
 
     long id = std::stol(vector[0]);
-    double x = std::stod(vector[1]);
-    double y = std::stod(vector[2]);
+    double x = std::stod(vector[2]);
+    double y = std::stod(vector[1]);
 
     return new Vertex(id, x, y);
 }

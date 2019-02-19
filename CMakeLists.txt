@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.12)
 project(Pathfinding_Problem)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
-set(SOURCE_EXE test.cpp)
+set(SOURCE_EXE main.cpp)
 
 # Graph components
 set(VERTEX_CPP classes/Vertex/Vertex.cpp)
@@ -12,10 +15,66 @@ set(GRAPH_CPP classes/Graph/Graph.cpp)
 
 # Utils
 set(CSVUTIL_CPP classes/Utilities/CSVUtil/CSVUtil.cpp)
+set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp)
 
-add_executable(Pathfindind_Problem ${SOURCE_EXE}
+add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${VERTEX_CPP}
         ${EDGE_CPP}
         ${GRAPH_CPP}
-        ${CSVUTIL_CPP})
+        ${CSVUTIL_CPP}
+        ${SHADERLOADER_CPP} gui/MainWindow.cpp gui/CustomOpenGLWidget.cpp)
 
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+
+find_package(Qt5Widgets CONFIG REQUIRED)
+
+message(" ")
+
+if (OPENGL_FOUND)
+    message("opengl found")
+    message("include dir: ${OPENGL_INCLUDE_DIR}")
+    message("link libraries: ${OPENGL_LIBRARY}")
+    message(" ")
+endif()
+
+if (GLUT_FOUND)
+    message("GLUT found")
+    message("include dir: ${GLUT_INCLUDE_DIR}")
+    message("link libraries: ${GLUT_LIBRARY}")
+    message(" ")
+endif()
+
+if (GLEW_FOUND)
+    message("FLEW found")
+    message("include dir: ${GLEW_INCLUDE_DIR}")
+    message("link libraries: ${GLEW_LIBRARY}")
+    message(" ")
+endif()
+
+if (glfw3_FOUND)
+    message("glfw3 found")
+    message(" ")
+endif()
+
+if (glm_FOUND)
+    message("glm found")
+    message(" ")
+endif()
+
+if (Qt5Widgets_FOUND)
+    message(Qt5 found)
+    message(" ")
+endif()
+
+include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME}
+        ${OPENGL_LIBRARY}
+        ${OPENGL_gl_LIBRARY}
+        ${GLUT_LIBRARY}
+        ${GLEW_LIBRARY}
+        glfw
+        Qt5::Widgets)

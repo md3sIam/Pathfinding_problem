@@ -25,3 +25,7 @@ std::string CSVUtil::vector_to_string(const std::vector<std::string> &v) {
     }
     return result;
 }
+
+void CSVUtil::csv_to_cpp_fp(std::string &s) {
+    s[s.find('.')] = ',';
+}

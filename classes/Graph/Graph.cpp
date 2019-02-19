@@ -5,7 +5,7 @@
 #include "../Vertex/Vertex.h"
 #include "../Edge/Edge.h"
 
-Graph::Graph(): isNormalized(false) {}
+Graph::Graph(): isNormalized(false), maxX(-181), maxY(-181), minX(181), minY(181) {}
 
 Graph::Graph(const Graph &g) {
     vertices = g.vertices;
@@ -74,6 +74,23 @@ void Graph::read_vertices(const std::string &filename) {
     while (std::getline(fs, s)){
         Vertex* vertex = Vertex::get_vertex_from_csv_string(s);
         vertices.insert(std::make_pair(vertex->id, vertex));
+        checkForMaxMin(*vertex);
+    }
+    fs.close();
+}
+
+void Graph::checkForMaxMin(Vertex &v){
+    if (maxX < v.x){
+        maxX = v.x;
+    }
+    if (maxY < v.y){
+        maxY = v.y;
+    }
+    if (minX > v.x){
+        minX = v.x;
+    }
+    if (minY > v.y){
+        minY = v.y;
     }
 }
 
@@ -94,6 +111,7 @@ void Graph::read_edges(const std::string &filename) {
         Edge* edge = new Edge(&v1, &v2, weight);
         edges.push_back(edge);
     }
+    fs.close();
 }
 
 void Graph::normalize() {
@@ -119,4 +137,16 @@ void Graph::get_info() {
 
     std::cout << "\nTOTAL\nVertices: " << vertices.size();
     std::cout << "\nEdges: " << edges.size() << '\n';
+}
+
+float* Graph::getEdgesPreparedToDraw() const {
+    auto* result = new float[4 * edges.size()];
+    int i = 0;
+    for (auto edge = edges.begin(); edge != edges.end(); edge++, i += 4){
+        result[i] = (float) (*edge)->vFrom->x;
+        result[i + 1] = (float) (*edge)->vFrom->y;
+        result[i + 2] = (float) (*edge)->vTo->x;
+        result[i + 3] = (float) (*edge)->vTo->y;
+    }
+    return result;
 }
