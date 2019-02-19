@@ -16,11 +16,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                              "../maps/roads/SPb3_roads.csv");
     std::cout << "Graph is read\n";
     ui->mapWidget->setGraph(g);
-    //ui->mapWidget->paintGL();
 
 }
 
 MainWindow::~MainWindow() {
+    delete ui->menuFile;
+    delete ui->menuHelp;
+    delete ui->menubar;
+    delete ui->mapWidget;
+    delete ui->horizontalLayout;
+    delete ui->centralwidget;
     delete ui;
 }
 

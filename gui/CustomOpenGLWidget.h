@@ -23,12 +23,16 @@ public:
 protected:
     Graph* graph;
     QOpenGLShaderProgram* shaderProgram;
+    float zoom , shiftX, shiftY;
     //QOpenGLFunctions *f;
 
     QOpenGLShaderProgram* load_shaders(std::string v, std::string f);
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
+
+    void mouseDoubleClickEvent(QMouseEvent* e) override;
+    void wheelEvent(QWheelEvent* e) override;
 };
 
 

@@ -8,6 +8,7 @@
 
 #include <QOpenGLFunctions>
 #include "CustomOpenGLWidget.h"
+#include <QWheelEvent>
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -16,14 +17,17 @@
 #include <exception>
 
 CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
-        : QOpenGLWidget(parent)
+        : QOpenGLWidget(parent), zoom(1), shiftX(0), shiftY(0), graph(nullptr)
 {
 
 }
 
 CustomOpenGLWidget::~CustomOpenGLWidget()
 {
-
+    if (!graph){
+        delete graph;
+        delete shaderProgram;
+    }
 }
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
@@ -42,14 +46,20 @@ void CustomOpenGLWidget::initializeGL()
 
 void CustomOpenGLWidget::paintGL()
 {
+    static int count = 0;
+    std::cout << "Repainting x" << count++ << "!\n";
     auto f = QOpenGLContext::currentContext()->functions();
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    int minxyID = shaderProgram->attributeLocation("minxy");
-    int maxxyID = shaderProgram->attributeLocation("maxxy");
+    f->glLineWidth(0.1);
+
+    int minxyID = shaderProgram->uniformLocation("minxy");
+    int maxxyID = shaderProgram->uniformLocation("maxxy");
+    int zoomLocation = shaderProgram->attributeLocation("zoom");
     int posLocation = shaderProgram->attributeLocation("pos");
 
-    shaderProgram->setAttributeValue(minxyID, (float)graph->minX, (float)graph->minY);
-    shaderProgram->setAttributeValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
+    shaderProgram->setUniformValue(minxyID, (float)graph->minX, (float)graph->minY);
+    shaderProgram->setUniformValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
+    shaderProgram->setAttributeValue(zoomLocation, zoom);
 
     shaderProgram->enableAttributeArray(posLocation);
     GLfloat* edges = graph->getEdgesPreparedToDraw();
@@ -57,6 +67,7 @@ void CustomOpenGLWidget::paintGL()
     //f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     f->glDrawArrays(GL_LINES, 0, 2 * (GLsizei)graph->edges.size());
     shaderProgram->disableAttributeArray(posLocation);
+    delete edges;
 }
 
 void CustomOpenGLWidget::resizeGL(int w, int h)
@@ -136,4 +147,24 @@ QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(std::string vs_path, std:
     }
 
     return shaderProgram;
+}
+
+void CustomOpenGLWidget::mouseDoubleClickEvent(QMouseEvent *e) {
+    zoom *= 2;
+    std::cout << "Zoom changed\n";
+    update();
+}
+
+void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
+    //std::cout << e->angleDelta().x() << ' ' << e->angleDelta().y() << std::endl;
+    zoom += (float)(e->angleDelta().y()) / 1000;
+    if (zoom > 20.0f)   {
+        zoom = 20.0f;
+    }
+    else if (zoom < 0.0f){
+        zoom = 0.0f;
+    }
+    else {
+        update();
+    }
 }
