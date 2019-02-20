@@ -8,6 +8,7 @@
 
 #include <QOpenGLFunctions>
 #include "CustomOpenGLWidget.h"
+#include <cmath>
 #include <QWheelEvent>
 #include <sstream>
 #include <iostream>
@@ -17,7 +18,9 @@
 #include <exception>
 
 CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
-        : QOpenGLWidget(parent), zoom(1), shiftX(0), shiftY(0), graph(nullptr)
+        : QOpenGLWidget(parent), zoom(1), shiftX(0), shiftY(0), graph(nullptr),
+          wasMousePressed(false), recentShiftX(0), recentShiftY(0),
+          zoomAngle(0)
 {
 
 }
@@ -36,12 +39,9 @@ void CustomOpenGLWidget::setGraph(Graph *g) {
 
 void CustomOpenGLWidget::initializeGL()
 {
-//    f = QOpenGLContext::currentContext()->functions();
     shaderProgram = load_shaders(
             "../shaders/first_vertex.glsl",
             "../shaders/first_fragment.glsl");
-
-//    f->glUseProgram(shaderProgram);
 }
 
 void CustomOpenGLWidget::paintGL()
@@ -54,12 +54,16 @@ void CustomOpenGLWidget::paintGL()
 
     int minxyID = shaderProgram->uniformLocation("minxy");
     int maxxyID = shaderProgram->uniformLocation("maxxy");
-    int zoomLocation = shaderProgram->attributeLocation("zoom");
+    int zoomLocation = shaderProgram->uniformLocation("zoom");
     int posLocation = shaderProgram->attributeLocation("pos");
+    int shiftLocation = shaderProgram->uniformLocation("shiftInPix");
+    int screenRatioLocation = shaderProgram->uniformLocation("screenRatio");
 
     shaderProgram->setUniformValue(minxyID, (float)graph->minX, (float)graph->minY);
     shaderProgram->setUniformValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
-    shaderProgram->setAttributeValue(zoomLocation, zoom);
+    shaderProgram->setUniformValue(zoomLocation, zoom);
+    shaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
+    shaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height());
 
     shaderProgram->enableAttributeArray(posLocation);
     GLfloat* edges = graph->getEdgesPreparedToDraw();
@@ -155,16 +159,35 @@ void CustomOpenGLWidget::mouseDoubleClickEvent(QMouseEvent *e) {
     update();
 }
 
+void CustomOpenGLWidget::mousePressEvent(QMouseEvent *e) {
+    recentShiftX = e->pos().x();
+    recentShiftY = e->pos().y();
+}
+
+void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
+}
+
+void CustomOpenGLWidget::mouseMoveEvent(QMouseEvent *e) {
+    wasMousePressed = true;
+    shiftX += (e->pos().x() - recentShiftX) / zoom;
+    shiftY += (e->pos().y() - recentShiftY) / zoom;
+    recentShiftX = e->pos().x();
+    recentShiftY = e->pos().y();
+    update();
+}
+
 void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
-    //std::cout << e->angleDelta().x() << ' ' << e->angleDelta().y() << std::endl;
-    zoom += (float)(e->angleDelta().y()) / 1000;
-    if (zoom > 20.0f)   {
-        zoom = 20.0f;
-    }
-    else if (zoom < 0.0f){
-        zoom = 0.0f;
-    }
-    else {
+    zoomAngle -= e->angleDelta().y();
+    if (zoomAngle > 360.0f * 8) {
+        zoomAngle = 360.f * 8;
+        zoom = pow(2, zoomAngle / 360);
+    } else if (zoomAngle < -360.0f * 2) {
+        zoomAngle = -360.0f * 2;
+        zoom = pow(2, zoomAngle / 360);
+    } else {
+        zoom = pow(2, zoomAngle / 360);
         update();
     }
+    std::cout << "Current zoom: " << zoom << std::endl;
+    std::cout << "Current angle: " << zoomAngle << std::endl;
 }

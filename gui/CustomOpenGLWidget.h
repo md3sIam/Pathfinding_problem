@@ -24,6 +24,9 @@ protected:
     Graph* graph;
     QOpenGLShaderProgram* shaderProgram;
     float zoom , shiftX, shiftY;
+    float zoomAngle;
+    bool wasMousePressed;
+    float recentShiftX, recentShiftY;
     //QOpenGLFunctions *f;
 
     QOpenGLShaderProgram* load_shaders(std::string v, std::string f);
@@ -32,6 +35,9 @@ protected:
     void paintGL();
 
     void mouseDoubleClickEvent(QMouseEvent* e) override;
+    void mouseMoveEvent(QMouseEvent* e) override;
+    void mousePressEvent(QMouseEvent* e) override;
+    void mouseReleaseEvent(QMouseEvent* e) override;
     void wheelEvent(QWheelEvent* e) override;
 };
 
