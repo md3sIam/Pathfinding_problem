@@ -1,8 +1,4 @@
-//
-// Created by md3s on 04.02.19.
-//
 
-#include <GL/glut.h>
 #include "../classes/Edge/Edge.h"
 #include "../classes/Vertex/Vertex.h"
 
@@ -15,7 +11,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <exception>
+#include <QPushButton>
 
 CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
         : QOpenGLWidget(parent), zoom(1), shiftX(0), shiftY(0), graph(nullptr),
@@ -27,21 +23,39 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
 
 CustomOpenGLWidget::~CustomOpenGLWidget()
 {
-    if (!graph){
-        delete graph;
-        delete shaderProgram;
-    }
+    delete graph;
+    delete [] preparedEdges;
+    delete [] vertexTriangles;
+    //delete [] vtColors;
+    delete graphShaderProgram;
+    delete vertexShaderProgram;
 }
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
     graph = g;
+
+    QVector2D vec(10, 10);
+    printf("%f %f\n", vec.x(), vec.y());
+    vec = convertFromMapToCoords(vec);
+    printf("%f %f\n", vec.x(), vec.y());
+    vec = convertFromCoordsToMap(vec);
+    printf("%f %f\n", vec.x(), vec.y());
+
 }
 
 void CustomOpenGLWidget::initializeGL()
 {
-    shaderProgram = load_shaders(
-            "../shaders/first_vertex.glsl",
-            "../shaders/first_fragment.glsl");
+    graphShaderProgram = load_shaders(
+            "../shaders/edge_vertex_shader.glsl",
+            "../shaders/edge_fragment_shader.glsl");
+    vertexShaderProgram = load_shaders(
+            "../shaders/vertex_vertex_shader.glsl",
+            "../shaders/vertex_fragment_shader.glsl",
+            "../shaders/vertex_geom_shader.glsl");
+    prepareEdgesToDraw();
+    //prepareVertexTrianglesToDraw();
+    prepareVertexToDraw();
+    makeCurrent();
 }
 
 void CustomOpenGLWidget::paintGL()
@@ -49,49 +63,65 @@ void CustomOpenGLWidget::paintGL()
     static int count = 0;
     std::cout << "Repainting x" << count++ << "!\n";
     auto f = QOpenGLContext::currentContext()->functions();
-    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    f->glLineWidth(0.1);
+    f->glClear(GL_COLOR_BUFFER_BIT);
 
-    int minxyID = shaderProgram->uniformLocation("minxy");
-    int maxxyID = shaderProgram->uniformLocation("maxxy");
-    int zoomLocation = shaderProgram->uniformLocation("zoom");
-    int posLocation = shaderProgram->attributeLocation("pos");
-    int shiftLocation = shaderProgram->uniformLocation("shiftInPix");
-    int screenRatioLocation = shaderProgram->uniformLocation("screenRatio");
+    if (!graphShaderProgram->bind()){
+        throw std::runtime_error("Vertex shader isn't bound");
+    }
 
-    shaderProgram->setUniformValue(minxyID, (float)graph->minX, (float)graph->minY);
-    shaderProgram->setUniformValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
-    shaderProgram->setUniformValue(zoomLocation, zoom);
-    shaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
-    shaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height());
+    int minxyID = graphShaderProgram->uniformLocation("minxy");
+    int maxxyID = graphShaderProgram->uniformLocation("maxxy");
+    int zoomLocation = graphShaderProgram->uniformLocation("zoom");
+    int posLocation = graphShaderProgram->attributeLocation("pos");
+    int shiftLocation = graphShaderProgram->uniformLocation("shiftInPix");
+    int screenRatioLocation = graphShaderProgram->uniformLocation("screenRatio");
 
-    shaderProgram->enableAttributeArray(posLocation);
-    GLfloat* edges = graph->getEdgesPreparedToDraw();
-    shaderProgram->setAttributeArray(posLocation, graph->getEdgesPreparedToDraw(), 2);
-    //f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    graphShaderProgram->setUniformValue(minxyID, (float)graph->minX, (float)graph->minY);
+    graphShaderProgram->setUniformValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
+    graphShaderProgram->setUniformValue(zoomLocation, zoom);
+    graphShaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
+    graphShaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height());
+
+    f->glEnableVertexAttribArray(posLocation);
+    graphShaderProgram->setAttributeArray(posLocation, GL_FLOAT, preparedEdges, 2);
     f->glDrawArrays(GL_LINES, 0, 2 * (GLsizei)graph->edges.size());
-    shaderProgram->disableAttributeArray(posLocation);
-    delete edges;
+
+
+    if (!vertexShaderProgram->bind()){
+        throw std::runtime_error("Vertex shader isn't bound");
+    }
+
+    minxyID = vertexShaderProgram->uniformLocation("minxy");
+    maxxyID = vertexShaderProgram->uniformLocation("maxxy");
+    zoomLocation = vertexShaderProgram->uniformLocation("zoom");
+    posLocation = vertexShaderProgram->attributeLocation("pos");
+    shiftLocation = vertexShaderProgram->uniformLocation("shiftInPix");
+    screenRatioLocation = vertexShaderProgram->uniformLocation("screenRatio");
+//    int hlLocation = vertexShaderProgram->attributeLocation("hl");
+
+
+    vertexShaderProgram->setUniformValue(minxyID, (float)graph->minX, (float)graph->minY);
+    vertexShaderProgram->setUniformValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
+    vertexShaderProgram->setUniformValue(zoomLocation, zoom);
+    vertexShaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
+    vertexShaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height());
+    vertexShaderProgram->setUniformValue("vSize", vertexSizeX, vertexSizeY);
+
+    vertexShaderProgram->enableAttributeArray(posLocation);
+
+    vertexShaderProgram->setUniformValue("f", false);
+    f->glEnableVertexAttribArray(posLocation);
+    graphShaderProgram->setAttributeArray(posLocation, vertexTriangles, 2, 2 * sizeof(float));
+    f->glDrawArrays(GL_POINTS, 0, graph->vertices.size());
+
 }
 
-void CustomOpenGLWidget::resizeGL(int w, int h)
-{
-    glViewport(0,0,w,h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45, (float)w/h, 0.01, 100.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0,0,5,0,0,0,0,1,0);
-}
+void CustomOpenGLWidget::resizeGL(int w, int h) {}
 
-QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(std::string vs_path, std::string fs_path) {
-//    std::string vs_path("../shaders/first_vertex.glsl");
-//    std::string fs_path("../shaders/first_fragment.glsl");
-
-//    f = QOpenGLContext::currentContext()->functions();
-//    GLuint VertexShaderID = f->glCreateShader(GL_VERTEX_SHADER);
-
+QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(const std::string& vs_path,
+                                                        const std::string& fs_path,
+                                                        const std::string& gs_path) {
 
     //VERTEX SHADER
     QString vertexShaderCode;
@@ -113,6 +143,30 @@ QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(std::string vs_path, std:
     //check shader
     if (!v_shader.isCompiled()){
         std::cout << v_shader.log().toStdString() << std::endl;
+    }
+
+    //GEOMETRY SHADER
+    QOpenGLShader g_shader(QOpenGLShader::Geometry);
+    if (gs_path.length() > 2) {
+        QString geomShaderCode;
+        std::ifstream gs_stream(gs_path, std::ios::in);
+        if (gs_stream.is_open()) {
+            std::stringstream sstr;
+            sstr << gs_stream.rdbuf();
+            geomShaderCode = sstr.str().c_str();
+            gs_stream.close();
+        } else {
+            std::cout << gs_path << std::endl;
+            throw std::runtime_error("Cannot open geometry shader code");
+        }
+
+        //compile vertex shader
+        g_shader.compileSourceCode(geomShaderCode);
+
+        //check shader
+        if (!g_shader.isCompiled()) {
+            std::cout << g_shader.log().toStdString() << std::endl;
+        }
     }
 
     //FRAGMENT SHADER
@@ -137,26 +191,24 @@ QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(std::string vs_path, std:
     }
 
     //CREATE A PROGRAM
-    shaderProgram = new QOpenGLShaderProgram;
-    shaderProgram->addShader(&v_shader);
-    shaderProgram->addShader(&f_shader);
-
-    shaderProgram->link();
-    if (!shaderProgram->isLinked()){
-        std::cout << shaderProgram->log().toStdString() << std::endl;
+    auto program = new QOpenGLShaderProgram;
+    program->addShader(&v_shader);
+    program->addShader(&f_shader);
+    if (gs_path.length() > 2){
+        program->addShader(&g_shader);
     }
 
-    if (!shaderProgram->bind()){
-        throw std::exception();
+    program->link();
+    if (!program->isLinked()){
+        std::cout << program->log().toStdString() << std::endl;
+        throw std::runtime_error("Program isn't linked");
     }
 
-    return shaderProgram;
+    return program;
 }
 
 void CustomOpenGLWidget::mouseDoubleClickEvent(QMouseEvent *e) {
-    zoom *= 2;
-    std::cout << "Zoom changed\n";
-    update();
+
 }
 
 void CustomOpenGLWidget::mousePressEvent(QMouseEvent *e) {
@@ -178,16 +230,108 @@ void CustomOpenGLWidget::mouseMoveEvent(QMouseEvent *e) {
 
 void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
     zoomAngle -= e->angleDelta().y();
-    if (zoomAngle > 360.0f * 8) {
-        zoomAngle = 360.f * 8;
-        zoom = pow(2, zoomAngle / 360);
-    } else if (zoomAngle < -360.0f * 2) {
-        zoomAngle = -360.0f * 2;
-        zoom = pow(2, zoomAngle / 360);
+    if (zoomAngle > 360.0f * 80) {
+        zoomAngle = 360.f * 80;
+        zoom = (float)pow(2, zoomAngle / 360);
+    } else if (zoomAngle < -360.0f * 20) {
+        zoomAngle = -360.0f * 20;
+        zoom = (float)pow(2, zoomAngle / 360);
     } else {
-        zoom = pow(2, zoomAngle / 360);
+        zoom = (float)pow(2, zoomAngle / 360);
         update();
     }
     std::cout << "Current zoom: " << zoom << std::endl;
     std::cout << "Current angle: " << zoomAngle << std::endl;
 }
+
+QVector2D CustomOpenGLWidget::convertPointFromCanvasToMap(const QVector2D &v) {
+    QVector2D res;
+    res.setX((v.x() + 1) / 2 * width());
+    res.setY((-v.y() + 1) / 2 * height());
+    return res;
+}
+
+QVector2D CustomOpenGLWidget::convertPointFromMapToCanvas(const QVector2D &v) {
+    QVector2D res;
+    res.setX(v.x() / width() * 2 - 1);
+    res.setY(-v.y() / height() * 2 + 1);
+    return res;
+}
+
+QVector2D CustomOpenGLWidget::convertFromCoordsToMap(const QVector2D &v) {
+    float deltaX = graph->maxX - graph->minX;
+    float deltaY = graph->maxY - graph->minY;
+
+    QVector2D res;
+    res.setX((v.x() - graph->minX) / deltaX * width());
+    res.setY(height() - (v.y() - graph->minY) / deltaY * height());
+    return res;
+}
+
+QVector2D CustomOpenGLWidget::convertFromMapToCoords(const QVector2D &v) {
+    float deltaX = graph->maxX - graph->minX;
+    float deltaY = graph->maxY - graph->minY;
+
+    QVector2D res;
+    res.setX(v.x() / width() * deltaX + graph->minX);
+    res.setY((height() - v.y()) / height() * deltaY + graph->minY);
+    return res;
+}
+
+void CustomOpenGLWidget::prepareEdgesToDraw(){
+    preparedEdges = new float[4 * graph->edges.size()];
+    int i = 0;
+    for (auto edge = graph->edges.begin(); edge != graph->edges.end(); edge++, i += 4){
+        preparedEdges[i] = (float) (*edge)->vFrom->lon;
+        preparedEdges[i + 1] = (float) (*edge)->vFrom->lat;
+        preparedEdges[i + 2] = (float) (*edge)->vTo->lon;
+        preparedEdges[i + 3] = (float) (*edge)->vTo->lat;
+    }
+}
+
+void CustomOpenGLWidget::prepareVertexTrianglesToDraw() {
+    float x = .04f / width() * (float)(graph->maxX - graph->minX);
+    float y = .04f / height() * (float)(graph->maxY - graph->minY);
+    printf("Keks:\n%f %f", x, y);
+    vertexTriangles = new float[graph->vertices.size() * 12];
+    vtColors = new float[graph->vertices.size() * 6];
+    int i = 0;
+    for (auto v : graph->vertices){
+        vertexTriangles[i] = (float)v.second->lon;
+        vertexTriangles[i + 1] = (float)v.second->lat + y;
+        vertexTriangles[i + 2] = (float)v.second->lon - x;
+        vertexTriangles[i + 3] = (float)v.second->lat;
+        vertexTriangles[i + 4] = (float)v.second->lon + x;
+        vertexTriangles[i + 5] = (float)v.second->lat;
+        vertexTriangles[i + 6] = (float)v.second->lon - x;
+        vertexTriangles[i + 7] = (float)v.second->lat;
+        vertexTriangles[i + 8] = (float)v.second->lon + x;
+        vertexTriangles[i + 9] = (float)v.second->lat;
+        vertexTriangles[i + 10] = (float)v.second->lon;
+        vertexTriangles[i + 11] = (float)v.second->lat - y;
+//        printf("%f %f\n%f %f\n%f %f\n%f %f\n\n",
+//               vertexTriangles[i],
+//               vertexTriangles[i + 1],
+//               vertexTriangles[i + 2],
+//               vertexTriangles[i + 3],
+//               vertexTriangles[i + 4],
+//               vertexTriangles[i + 5],
+//               vertexTriangles[i + 10],
+//               vertexTriangles[i + 11]);
+        i += 12;
+    }
+    for (int j = 0; j < graph->vertices.size() * 6; j++){
+        vtColors[j] = 1.0f;
+    }
+}
+
+void CustomOpenGLWidget::prepareVertexToDraw() {
+    vertexTriangles = new float[graph->vertices.size() * 2]{0};
+    int i = 0;
+    for (auto v : graph->vertices){
+        vertexTriangles[i] = (float)v.second->lon;
+        vertexTriangles[i + 1] = (float)v.second->lat;
+        i += 2;
+    }
+}
+

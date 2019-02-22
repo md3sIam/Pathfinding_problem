@@ -1,4 +1,5 @@
 #version 330 core
+uniform float zoom;
 out vec3 color;
 
 void main(){

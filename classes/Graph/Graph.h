@@ -24,7 +24,6 @@ private:
     void read_vertices(const std::string &filename);
     void read_edges(const std::string &filename);
     void normalize();
-    float* getEdgesPreparedToDraw() const;
     void checkForMaxMin(Vertex &v);
 
     Vertex& get_vertex_by_id(long id);

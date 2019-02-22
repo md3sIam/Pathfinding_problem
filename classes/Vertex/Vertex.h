@@ -12,7 +12,7 @@ private:
     //Variables
     static long max_custom_id;
     long id;
-    double x, y;
+    double lat, lon;
     std::vector<Edge*> incidentEdges;
 
     //STATIC METHODS
@@ -31,4 +31,5 @@ public:
 
     friend class Edge;
     friend class Graph;
+    friend class CustomOpenGLWidget;
 };

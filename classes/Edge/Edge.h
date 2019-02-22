@@ -27,4 +27,5 @@ public:
     std::string get_info();
 
     friend class Graph;
+    friend class CustomOpenGLWidget;
 };

@@ -80,17 +80,17 @@ void Graph::read_vertices(const std::string &filename) {
 }
 
 void Graph::checkForMaxMin(Vertex &v){
-    if (maxX < v.x){
-        maxX = v.x;
+    if (maxX < v.lon){
+        maxX = v.lon;
     }
-    if (maxY < v.y){
-        maxY = v.y;
+    if (maxY < v.lat){
+        maxY = v.lat;
     }
-    if (minX > v.x){
-        minX = v.x;
+    if (minX > v.lon){
+        minX = v.lon;
     }
-    if (minY > v.y){
-        minY = v.y;
+    if (minY > v.lat){
+        minY = v.lat;
     }
 }
 
@@ -137,16 +137,4 @@ void Graph::get_info() {
 
     std::cout << "\nTOTAL\nVertices: " << vertices.size();
     std::cout << "\nEdges: " << edges.size() << '\n';
-}
-
-float* Graph::getEdgesPreparedToDraw() const {
-    auto* result = new float[4 * edges.size()];
-    int i = 0;
-    for (auto edge = edges.begin(); edge != edges.end(); edge++, i += 4){
-        result[i] = (float) (*edge)->vFrom->x;
-        result[i + 1] = (float) (*edge)->vFrom->y;
-        result[i + 2] = (float) (*edge)->vTo->x;
-        result[i + 3] = (float) (*edge)->vTo->y;
-    }
-    return result;
 }

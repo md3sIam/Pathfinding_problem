@@ -22,7 +22,8 @@ add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${EDGE_CPP}
         ${GRAPH_CPP}
         ${CSVUTIL_CPP}
-        ${SHADERLOADER_CPP} gui/MainWindow.cpp gui/CustomOpenGLWidget.cpp)
+        ${SHADERLOADER_CPP} gui/MainWindow.cpp gui/CustomOpenGLWidget.cpp
+        gui/VertexButton.cpp)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)

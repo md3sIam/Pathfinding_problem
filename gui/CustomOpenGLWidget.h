@@ -11,6 +11,7 @@
 #include <QOpenGLShader>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLContext>
+#include <gui/VertexButton.h>
 #include "../classes/Graph/Graph.h"
 
 class CustomOpenGLWidget : public QOpenGLWidget
@@ -22,14 +23,24 @@ public:
 
 protected:
     Graph* graph;
-    QOpenGLShaderProgram* shaderProgram;
-    float zoom , shiftX, shiftY;
+    QOpenGLShaderProgram* graphShaderProgram;
+    QOpenGLShaderProgram* vertexShaderProgram;
+    float vertexSizeX = 1;
+    float vertexSizeY = 1;
+    float zoom,
+        shiftX,
+        shiftY;
     float zoomAngle;
     bool wasMousePressed;
-    float recentShiftX, recentShiftY;
-    //QOpenGLFunctions *f;
+    float recentShiftX,
+        recentShiftY;
+//    std::vector<VertexButton*> vertexButtons;
+    float* preparedEdges;
+    float* vertexTriangles;
+    float* vtColors;
 
-    QOpenGLShaderProgram* load_shaders(std::string v, std::string f);
+
+    QOpenGLShaderProgram* load_shaders(const std::string& v, const std::string& f, const std::string& g = "");
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
@@ -39,6 +50,17 @@ protected:
     void mousePressEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
     void wheelEvent(QWheelEvent* e) override;
+
+private:
+    void prepareEdgesToDraw();
+    void prepareVertexTrianglesToDraw();
+    void prepareVertexToDraw();
+
+    QVector2D convertPointFromMapToCanvas(const QVector2D &v);
+    QVector2D convertPointFromCanvasToMap(const QVector2D &v);
+    QVector2D convertFromCoordsToMap(const QVector2D& v);
+    QVector2D convertFromMapToCoords(const QVector2D& v);
+
 };
 
 

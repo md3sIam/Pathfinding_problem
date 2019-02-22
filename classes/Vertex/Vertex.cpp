@@ -9,37 +9,37 @@
 
 long Vertex::max_custom_id = 0;
 
-Vertex::Vertex(long id, double x, double y): id(id), x(x), y(y) {
+Vertex::Vertex(long id, double x, double y): id(id), lon(x), lat(y) {
     //printf("Vertex with id %ld created", id);
 };
 
 Vertex::Vertex(Vertex const &v){
     id = v.id;
-    x = v.x;
-    y = v.y;
+    lon = v.lon;
+    lat = v.lat;
     incidentEdges = v.incidentEdges;
     printf("Vertex with id %ld created", id);
 }
 
 Vertex::Vertex(Vertex && v) noexcept {
     id = v.id;
-    x = v.x;
-    y = v.y;
+    lon = v.lon;
+    lat = v.lat;
     incidentEdges = v.incidentEdges;
 }
 
 Vertex& Vertex::operator=(const Vertex &v) {
     id = v.id;
-    x = v.x;
-    y = v.y;
+    lon = v.lon;
+    lat = v.lat;
     incidentEdges = v.incidentEdges;
     return *this;
 }
 
 Vertex& Vertex::operator=(Vertex &&v) noexcept {
     id = v.id;
-    x = v.x;
-    y = v.y;
+    lon = v.lon;
+    lat = v.lat;
     incidentEdges = std::move(v.incidentEdges);
     return *this;
 }
@@ -51,8 +51,8 @@ Vertex::~Vertex() {
 std::string Vertex::get_info() {
     std::string info;
     info += std::string("ID: ") + std::to_string(id);
-    info += std::string("\nx: ") + std::to_string(x);
-    info += std::string("\ny: ") + std::to_string(y);
+    info += std::string("\nx: ") + std::to_string(lon);
+    info += std::string("\ny: ") + std::to_string(lat);
     info += std::string("\nIE amount: ") + std::to_string(incidentEdges.size());
     return info;
 }
