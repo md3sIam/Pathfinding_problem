@@ -19,6 +19,7 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
           zoomAngle(0)
 {
     setFocusPolicy(Qt::StrongFocus);
+    //setMaximumWidth(1200);
 
 }
 
@@ -54,7 +55,6 @@ void CustomOpenGLWidget::initializeGL()
             "../shaders/vertex_fragment_shader.glsl",
             "../shaders/vertex_geom_shader.glsl");
     prepareEdgesToDraw();
-    //prepareVertexTrianglesToDraw();
     prepareVertexToDraw();
     makeCurrent();
     initialWidth = width();
@@ -92,12 +92,12 @@ void CustomOpenGLWidget::drawGraph(QOpenGLFunctions* f) const {
     int shiftLocation = graphShaderProgram->uniformLocation("shiftInPix");
     int screenRatioLocation = graphShaderProgram->uniformLocation("screenRatio");
 
-
     graphShaderProgram->setUniformValue(minxyID, (float)graph->minX, (float)graph->minY);
     graphShaderProgram->setUniformValue(maxxyID, (float)graph->maxX, (float)graph->maxY);
     graphShaderProgram->setUniformValue(zoomLocation, zoom);
     graphShaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
-    graphShaderProgram->setUniformValue(screenRatioLocation, initialWidth, initialHeight);
+    graphShaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height());
+    graphShaderProgram->setUniformValue("baseRatio", initialWidth, initialHeight);
 
     graphShaderProgram->enableAttributeArray(posLocation);
     graphShaderProgram->setAttributeArray(posLocation, GL_FLOAT, preparedEdges, 2);
@@ -122,7 +122,8 @@ void CustomOpenGLWidget::highlightVertices(QOpenGLFunctions *f) const {
     vertexShaderProgram->setUniformValue(maxxyID, (float) graph->maxX, (float) graph->maxY);
     vertexShaderProgram->setUniformValue(zoomLocation, zoom);
     vertexShaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
-    vertexShaderProgram->setUniformValue(screenRatioLocation, initialWidth, initialHeight);
+    vertexShaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height()/*initialWidth, initialHeight*/);
+    vertexShaderProgram->setUniformValue("baseRatio", initialWidth, initialHeight);
     vertexShaderProgram->setUniformValue("radius", vertexRadius);
 
     vertexShaderProgram->enableAttributeArray(posLocation);
@@ -323,9 +324,9 @@ void CustomOpenGLWidget::prepareVertexToDraw() {
     }
     vtColors = new float[graph->vertices.size() * 3];
     for (int i = 0; i < graph->vertices.size() * 3; i += 3){
-        vtColors[i] = 1.0f;
-        vtColors[i + 1] = 0.0f;
-        vtColors[i + 2] = 1.0f;
+        vtColors[i] = .7f;
+        vtColors[i + 1] = .0f;
+        vtColors[i + 2] = .2f;
     }
 }
 

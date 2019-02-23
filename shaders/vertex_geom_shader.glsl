@@ -26,14 +26,17 @@ void drawCircles(){
     for (int i = 0; i < 16; i++){
         gl_Position = center;
         f_color = g_color[0];
+//        f_color = vec3(1);
         EmitVertex();
 
         gl_Position = points[i];
         f_color = g_color[0];
+        f_color *= 0.95;
         EmitVertex();
 
         gl_Position = points[(i + 1) % 16];
         f_color = g_color[0];
+        f_color *= 0.95;
         EmitVertex();
         EndPrimitive();
     }
