@@ -126,6 +126,20 @@ Vertex& Graph::get_vertex_by_id(long id) {
     return *v;
 }
 
+Vertex* Graph::getTheClosestVertex(float x, float y, float radius) {
+    Vertex* res = nullptr;
+    float minDist = radius * radius + 1;
+    for (auto v : vertices){
+        float dist = (v.second->lon - x) * (v.second->lon - x) +
+                   (v.second->lat - y) * (v.second->lat - y);
+        if (dist < minDist){
+            res = v.second;
+            minDist = dist;
+        }
+    }
+    return res;
+}
+
 void Graph::get_info() {
     for (auto pair : vertices){
         std::cout << pair.second->get_info() << "\n\n";

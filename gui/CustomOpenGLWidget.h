@@ -27,19 +27,18 @@ protected:
     QOpenGLShaderProgram* vertexShaderProgram;
     int initialWidth, initialHeight;
     float vertexRadius = 10;
-//    float vertexSizeY = 10;
     float zoom,
         shiftX,
         shiftY;
     float zoomAngle;
     float recentShiftX,
         recentShiftY;
-//    std::vector<VertexButton*> vertexButtons;
-    float* preparedEdges;
-    float* vertexTriangles;
-    float* vtColors;
-    bool wasMousePressed;
+    float* preparedEdges = nullptr;
+    float* vertexTriangles = nullptr;
+    float* vtColors = nullptr;
+    bool wasMouseMoved;
     bool vertexHighlight = false;
+    std::vector<Vertex*> selectedVertices;
 
 
     QOpenGLShaderProgram* load_shaders(const std::string& v, const std::string& f, const std::string& g = "");
@@ -68,6 +67,8 @@ private:
     QVector2D convertFromCoordsToMap(const QVector2D& v);
     QVector2D convertFromMapToCoords(const QVector2D& v);
 
+    QVector2D convertCurrentPointFromMapToCoords(const QVector2D& v);
+    QVector2D convertCurrentPointFromCoordsToMap(const QVector2D& v);
 };
 
 

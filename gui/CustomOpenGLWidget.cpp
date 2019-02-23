@@ -15,12 +15,12 @@
 
 CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
         : QOpenGLWidget(parent), zoom(1), shiftX(0), shiftY(0), graph(nullptr),
-          wasMousePressed(false), recentShiftX(0), recentShiftY(0),
+          recentShiftX(0), recentShiftY(0),
           zoomAngle(0)
 {
     setFocusPolicy(Qt::StrongFocus);
-    //setMaximumWidth(1200);
-
+    setMaximumWidth(1920);
+    setMaximumHeight(1200);
 }
 
 CustomOpenGLWidget::~CustomOpenGLWidget()
@@ -65,7 +65,7 @@ void CustomOpenGLWidget::initializeGL()
 void CustomOpenGLWidget::paintGL()
 {
     static int count = 0;
-    std::cout << "Repainting x" << count++ << "!\n";
+    //std::cout << "Repainting x" << count++ << "!\n";
     auto f = QOpenGLContext::currentContext()->functions();
     f->glClear(GL_COLOR_BUFFER_BIT);
 
@@ -229,15 +229,29 @@ void CustomOpenGLWidget::mouseDoubleClickEvent(QMouseEvent *e) {
 }
 
 void CustomOpenGLWidget::mousePressEvent(QMouseEvent *e) {
+    wasMouseMoved = false;
     recentShiftX = e->pos().x();
     recentShiftY = e->pos().y();
+    QVector2D v = convertCurrentPointFromMapToCoords(
+            {(float)e->pos().x(), (float)e->pos().y()});
+    printf("%f %f\n", v.x(), v.y());
 }
 
 void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
+    if (!wasMouseMoved){
+        QVector2D coord = convertCurrentPointFromMapToCoords({(float)e->x(), (float)e->y()});
+        Vertex* found = graph->getTheClosestVertex(coord.x(), coord.y(), 0.1);
+        if (found != nullptr){
+            std::cout << found->get_info() << std::endl;
+            selectedVertices.push_back(found);
+            prepareVertexToDraw();
+            update();
+        }
+    }
 }
 
 void CustomOpenGLWidget::mouseMoveEvent(QMouseEvent *e) {
-    wasMousePressed = true;
+    wasMouseMoved = true;
     shiftX += (e->pos().x() - recentShiftX) / zoom;
     shiftY += (e->pos().y() - recentShiftY) / zoom;
     recentShiftX = e->pos().x();
@@ -257,8 +271,8 @@ void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
         zoom = (float)pow(2, zoomAngle / 360);
         update();
     }
-    std::cout << "Current zoom: " << zoom << std::endl;
-    std::cout << "Current angle: " << zoomAngle << std::endl;
+    /*std::cout << "Current zoom: " << zoom << std::endl;
+    std::cout << "Current angle: " << zoomAngle << std::endl;*/
 }
 
 void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
@@ -303,6 +317,22 @@ QVector2D CustomOpenGLWidget::convertFromMapToCoords(const QVector2D &v) {
     return res;
 }
 
+QVector2D CustomOpenGLWidget::convertCurrentPointFromMapToCoords(const QVector2D &v) {
+    float x, y;
+    x = v.x() / width() * 2 - 1;
+    x = ((x / zoom * width() + initialWidth) / 2 - shiftX) / initialWidth *
+                (float)(graph->maxX - graph->minX) + (float)graph->minX;
+    y = (height() - v.y()) / height() * 2 - 1;
+    y = ((y / zoom * height() + initialHeight) / 2 + shiftY) / initialHeight *
+        (float)(graph->maxY - graph->minY) + (float)graph->minY;
+    return {x, y};
+}
+
+//QVector2D CustomOpenGLWidget::convertCurrentPointFromCoordsToMap(const QVector2D &v) {
+//    float x, y;
+//    x = (v.x() - (float)graph->minX) / (float)(graph->maxX - graph->minX) * 2 - 1;
+//}
+
 void CustomOpenGLWidget::prepareEdgesToDraw(){
     preparedEdges = new float[4 * graph->edges.size()];
     int i = 0;
@@ -315,6 +345,9 @@ void CustomOpenGLWidget::prepareEdgesToDraw(){
 }
 
 void CustomOpenGLWidget::prepareVertexToDraw() {
+    if (vertexTriangles != nullptr) delete [] vertexTriangles;
+    if (vtColors != nullptr) delete [] vtColors;
+
     vertexTriangles = new float[graph->vertices.size() * 2]{0};
     int i = 0;
     for (auto v : graph->vertices){
@@ -323,10 +356,19 @@ void CustomOpenGLWidget::prepareVertexToDraw() {
         i += 2;
     }
     vtColors = new float[graph->vertices.size() * 3];
-    for (int i = 0; i < graph->vertices.size() * 3; i += 3){
+    i = 0;
+    for (auto v : graph->vertices){
         vtColors[i] = .7f;
         vtColors[i + 1] = .0f;
         vtColors[i + 2] = .2f;
+        for (auto sv : selectedVertices){
+            if (sv == v.second) {
+                vtColors[i] = .0f;
+                vtColors[i + 1] = .7f;
+                break;
+            }
+        }
+        i += 3;
     }
 }
 

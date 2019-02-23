@@ -38,6 +38,7 @@ public:
     ~Graph();
 
     int read_graph_from_files(std::string, std::string);
+    Vertex* getTheClosestVertex(float x, float y, float radius = 100);
 
     void get_info();
 
