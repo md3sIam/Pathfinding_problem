@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui->setupUi(this);
     auto g = new Graph;
     g->read_graph_from_files("../maps/nodes/SPb3_nodes.csv",
-                             "../maps/roads/SPb3_roads.csv");
+                             "../maps/roads/SPb3_id_roads.csv");
     std::cout << "Graph is read\n";
     ui->mapWidget->setGraph(g);
 
@@ -26,6 +26,10 @@ MainWindow::~MainWindow() {
     delete ui->mapWidget;
     delete ui->horizontalLayout;
     delete ui->centralwidget;
+//    delete ui->tabEditor;
+//    delete ui->tabPathfinder;
+//    delete ui->tabSettings;
+//    delete ui->tabWidget;
     delete ui;
 }
 

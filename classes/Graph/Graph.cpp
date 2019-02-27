@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include "Graph.h"
 #include "../Vertex/Vertex.h"
 #include "../Edge/Edge.h"
@@ -35,10 +36,10 @@ Graph& Graph::operator=(Graph &&g) noexcept {
 
 Graph::~Graph() {
 
-    for (Edge* e : edges){
-        delete e;
+    for (std::pair<unsigned long, Edge*> e : edges){
+        delete e.second;
     }
-    std::vector<Edge*>().swap(edges);
+    std::map<unsigned long, Edge*>().swap(edges);
 
     for (std::pair<long, Vertex*> v : vertices){
         delete v.second;
@@ -104,20 +105,21 @@ void Graph::read_edges(const std::string &filename) {
     std::string s;
     std::getline(fs, s);
     while (std::getline(fs, s)){
-        std::tuple<long, long, long double> edge_info = Edge::get_edge_info_from_csv_string(s);
-        Vertex &v1 = get_vertex_by_id(std::get<0>(edge_info));
-        Vertex &v2 = get_vertex_by_id(std::get<1>(edge_info));
-        long double weight = std::get<2>(edge_info);
-        Edge* edge = new Edge(&v1, &v2, weight);
-        edges.push_back(edge);
+        std::tuple<unsigned long, long, long, long double> edge_info = Edge::get_edge_info_from_csv_string(s);
+        unsigned long id = std::get<0>(edge_info);
+        Vertex &v1 = get_vertex_by_id(std::get<1>(edge_info));
+        Vertex &v2 = get_vertex_by_id(std::get<2>(edge_info));
+        long double weight = std::get<3>(edge_info);
+        Edge* edge = new Edge(id, &v1, &v2, weight);
+        edges.insert({edge->id, edge});
     }
     fs.close();
 }
 
 void Graph::normalize() {
-    for (auto edge : edges){
-        edge->vFrom->incidentEdges.push_back(edge);
-        edge->vTo->incidentEdges.push_back(edge);
+    for (auto &pair : edges){
+        pair.second->vFrom->incidentEdges.push_back(pair.second);
+        pair.second->vTo->incidentEdges.push_back(pair.second);
     }
 }
 
@@ -145,10 +147,57 @@ void Graph::get_info() {
         std::cout << pair.second->get_info() << "\n\n";
     }
 
-    for (auto edge : edges){
-        std::cout << edge->get_info() << "\n\n";
+    for (auto pair : edges){
+        std::cout << pair.second->get_info() << "\n\n";
     }
 
     std::cout << "\nTOTAL\nVertices: " << vertices.size();
     std::cout << "\nEdges: " << edges.size() << '\n';
+}
+
+void Graph::addVertex(Vertex *vertex) {
+    vertex->id = (long)((vertex->lon + vertex->lat) * 1000000);
+    bool isIdOk;
+    bool notify = false;
+    long expectedId = vertex->id;
+    do {
+        isIdOk = true;
+        if (vertices.find(vertex->id) != vertices.end()) {
+            isIdOk = false;
+            vertex->id++;
+            notify = true;
+        }
+    } while (!isIdOk);
+    if (notify) {
+        std::cout << "Upon vertex creation expected ID {" <<
+            expectedId << "} was changed on {" << vertex->id << "}" << std::endl;
+    }
+    vertices.insert({vertex->id, vertex});
+}
+
+void Graph::addEdge(Edge *edge) {
+    //if weight equals -1 then calculate weight in euclid space
+    if (edge->weight == -1){
+        edge->weight = sqrt((edge->vFrom->lon - edge->vTo->lon) *
+                                    (edge->vFrom->lon - edge->vTo->lon) +
+                                    (edge->vFrom->lat - edge->vTo->lat) *
+                                            (edge->vFrom->lat - edge->vTo->lat));
+    }
+    bool isIdOk;
+    bool notify = false;
+    unsigned long expectedId = edge->id;
+    do {
+        isIdOk = true;
+        if (edges.find(edge->id) != edges.end()){
+            isIdOk = false;
+            notify = true;
+            edge->id++;
+        }
+    } while (!isIdOk);
+    if (notify) {
+        Edge::max_id += edge->id - expectedId; //stabilize
+        std::cout << "Upon edge creation expected ID {" <<
+                  expectedId << "} was changed on {" << edge->id << "}" << std::endl;
+    }
+    edges.insert({edge->id, edge});
 }

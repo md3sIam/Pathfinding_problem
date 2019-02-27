@@ -21,6 +21,17 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
     setFocusPolicy(Qt::StrongFocus);
     setMaximumWidth(1920);
     setMaximumHeight(1200);
+
+    infoLabel = new QLabel(this);
+    infoLabel->setStyleSheet("QLabel {"
+                             "background: transparent; "
+                             "color: red;"
+                             "}"
+                             "QLabel:hover {"
+                             "background: black;"
+                             "}");
+    infoLabel->setText("Lalalalal");
+    infoLabel->show();
 }
 
 CustomOpenGLWidget::~CustomOpenGLWidget()
@@ -35,14 +46,6 @@ CustomOpenGLWidget::~CustomOpenGLWidget()
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
     graph = g;
-
-    QVector2D vec(10, 10);
-    printf("%f %f\n", vec.x(), vec.y());
-    vec = convertFromMapToCoords(vec);
-    printf("%f %f\n", vec.x(), vec.y());
-    vec = convertFromCoordsToMap(vec);
-    printf("%f %f\n", vec.x(), vec.y());
-
 }
 
 void CustomOpenGLWidget::initializeGL()
@@ -277,9 +280,36 @@ void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
 
 void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     printf("%d = %s\n", e->key(), e->text().toStdString().c_str());
-    if (e->key() == /* h */72 || e->key() == /* р */1056){
+    int key = e->key();
+
+    //highlight vertices
+    if (key == /* h */72 || key == /* р */1056){
         vertexHighlight = !vertexHighlight;
         update();
+        return;
+    }
+
+    //connect vertices
+    if ((key == /* c */67 || key == /* c */1057) && selectedVertices.size() >= 2){
+        for (int i = 0; i < selectedVertices.size(); i++){
+            for (int j = i; j < selectedVertices.size(); j++){
+                graph->addEdge(new Edge(selectedVertices[i],
+                        selectedVertices[j], -1));
+            }
+        }
+        selectedVertices.clear();
+        prepareEdgesToDraw();
+        prepareVertexToDraw();
+        update();
+        return;
+    }
+
+    //unselect
+    if (key == /* d */68 || key == /* в */1042){
+        selectedVertices.clear();
+        prepareVertexToDraw();
+        update();
+        return;
     }
 }
 
@@ -334,13 +364,14 @@ QVector2D CustomOpenGLWidget::convertCurrentPointFromMapToCoords(const QVector2D
 //}
 
 void CustomOpenGLWidget::prepareEdgesToDraw(){
+    if (preparedEdges != nullptr) delete [] preparedEdges;
     preparedEdges = new float[4 * graph->edges.size()];
     int i = 0;
-    for (auto edge = graph->edges.begin(); edge != graph->edges.end(); edge++, i += 4){
-        preparedEdges[i] = (float) (*edge)->vFrom->lon;
-        preparedEdges[i + 1] = (float) (*edge)->vFrom->lat;
-        preparedEdges[i + 2] = (float) (*edge)->vTo->lon;
-        preparedEdges[i + 3] = (float) (*edge)->vTo->lat;
+    for (auto pair = graph->edges.begin(); pair != graph->edges.end(); pair++, i += 4){
+        preparedEdges[i] = (float) pair->second->vFrom->lon;
+        preparedEdges[i + 1] = (float) pair->second->vFrom->lat;
+        preparedEdges[i + 2] = (float) pair->second->vTo->lon;
+        preparedEdges[i + 3] = (float) pair->second->vTo->lat;
     }
 }
 

@@ -14,10 +14,11 @@ private:
     long double weight;
 
     //STATIC METHODS
-    static std::tuple<long, long, long double> get_edge_info_from_csv_string(const std::string& str);
+    static std::tuple<unsigned long, long, long, long double> get_edge_info_from_csv_string(const std::string& str);
 
 public:
     Edge(Vertex *from, Vertex *to, long double weight);
+    Edge(unsigned long id, Vertex *from, Vertex *to, long double weight);
     Edge(const Edge& e);
     Edge(Edge&& e) noexcept;
     Edge& operator=(const Edge &e);

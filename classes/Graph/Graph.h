@@ -14,7 +14,7 @@ class Graph {
 private:
     //PROPERTIES
     std::map<long, Vertex*> vertices;
-    std::vector<Edge*> edges;
+    std::map<unsigned long, Edge*> edges;
     double maxX, maxY, minX, minY;
 
     bool isNormalized;
@@ -34,8 +34,11 @@ public:
     Graph(const Graph& g);
     Graph(Graph&& g) noexcept;
     Graph& operator=(const Graph& g);
-    Graph&operator=(Graph&& g) noexcept;
+    Graph& operator=(Graph&& g) noexcept;
     ~Graph();
+
+    void addVertex(Vertex* vertex);
+    void addEdge(Edge* edge);
 
     int read_graph_from_files(std::string, std::string);
     Vertex* getTheClosestVertex(float x, float y, float radius = 100);

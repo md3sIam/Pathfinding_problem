@@ -7,7 +7,7 @@
 #include <iostream>
 #include "../Utilities/CSVUtil/CSVUtil.h"
 
-long Vertex::max_custom_id = 0;
+long Vertex::last_created_id = 0;
 
 Vertex::Vertex(long id, double x, double y): id(id), lon(x), lat(y) {
     //printf("Vertex with id %ld created", id);

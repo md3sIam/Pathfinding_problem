@@ -10,7 +10,8 @@ class Vertex {
 
 private:
     //Variables
-    static long max_custom_id;
+    static long last_created_id;
+
     long id;
     double lat, lon;
     std::vector<Edge*> incidentEdges;

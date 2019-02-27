@@ -7,6 +7,7 @@
 
 
 #include <QWidget>
+#include <QLabel>
 #include <QOpenGLWidget>
 #include <QOpenGLShader>
 #include <QOpenGLShaderProgram>
@@ -22,11 +23,13 @@ public:
     void setGraph(Graph* g);
 
 protected:
+    QLabel* infoLabel;
+
     Graph* graph;
     QOpenGLShaderProgram* graphShaderProgram;
     QOpenGLShaderProgram* vertexShaderProgram;
     int initialWidth, initialHeight;
-    float vertexRadius = 10;
+    float vertexRadius = 6;
     float zoom,
         shiftX,
         shiftY;
