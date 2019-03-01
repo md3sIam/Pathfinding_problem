@@ -11,6 +11,10 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui = new Ui::MainWindow;
     ui->setupUi(this);
+    setMinimumWidth(1024);
+    setMinimumHeight(768);
+//    setMaximumWidth(1920);
+//    setMaximumHeight(1200);
     auto g = new Graph;
     g->read_graph_from_files("../maps/nodes/SPb3_nodes.csv",
                              "../maps/roads/SPb3_id_roads.csv");

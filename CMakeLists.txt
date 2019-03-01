@@ -15,7 +15,7 @@ set(GRAPH_CPP classes/Graph/Graph.cpp)
 
 # Utils
 set(CSVUTIL_CPP classes/Utilities/CSVUtil/CSVUtil.cpp)
-set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp)
+set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp gui/custom_widgets/MultiToggleButton.cpp gui/custom_widgets/MultiToggleButton.h gui/custom_widgets/MapInfo.cpp gui/custom_widgets/MapInfo.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${VERTEX_CPP}
@@ -23,7 +23,8 @@ add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${GRAPH_CPP}
         ${CSVUTIL_CPP}
         ${SHADERLOADER_CPP} gui/MainWindow.cpp gui/CustomOpenGLWidget.cpp
-        gui/VertexButton.cpp)
+        gui/VertexButton.cpp
+        gui/custom_widgets/MultiToggleButton.cpp gui/custom_widgets/MultiToggleButton.h)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)

@@ -88,7 +88,7 @@
        <enum>Qt::NoFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabPathfinder">
        <attribute name="title">
@@ -99,31 +99,6 @@
        <attribute name="title">
         <string>Editor</string>
        </attribute>
-       <widget class="QListWidget" name="listWidget">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>100</y>
-          <width>256</width>
-          <height>192</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Keks</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Lol</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Chebu</string>
-         </property>
-        </item>
-       </widget>
       </widget>
       <widget class="QWidget" name="tabSettings">
        <attribute name="title">
