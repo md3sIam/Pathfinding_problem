@@ -28,7 +28,7 @@ public:
 
     ~Vertex();
 
-    std::string get_info();
+    std::string get_info() const;
 
     friend class Edge;
     friend class Graph;

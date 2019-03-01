@@ -27,7 +27,8 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
                               "Select edges"};
     mtb = new MultiToggleButton(names, this);
     connect(mtb, SIGNAL(valueChanged(uint)), this, SLOT(changeClickMode(uint)));
-    clickMode = mtb->getState();
+    connect(this, SIGNAL(clickModeChangedByKey(uint)), mtb, SLOT(changeValue(uint)));
+    clickMode = mtb->getState() + 1;
 
     //Setting MapInfo
     info = new MapInfo(this);
@@ -53,7 +54,7 @@ void CustomOpenGLWidget::changeVertexSize(int value) {
 }
 
 void CustomOpenGLWidget::changeClickMode(uint mode) {
-    clickMode = mode;
+    clickMode = mode + 1;
 
 }
 
@@ -277,28 +278,38 @@ void CustomOpenGLWidget::mousePressEvent(QMouseEvent *e) {
 }
 
 void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
-    if (!wasMouseMoved){
-        QVector2D coord = convertCurrentPointFromMapToCoords({(float)e->x(), (float)e->y()});
-        Vertex* found = graph->getTheClosestVertex(coord.x(), coord.y(), 0.1);
-        if (found != nullptr){
-            std::cout << found->get_info() << std::endl;
-            bool isUnique = true;
-            for (auto const &v : selectedVertices){
-                if (v == found){
-                    isUnique = false;
-                    break;
-                }
-            }
-            if (isUnique) {
-                selectedVertices.push_back(found);
-                prepareVertexToDraw();
-                update();
-                emit amountsChanged(graph->vertices.size(),
-                                    graph->edges.size(),
-                                    selectedVertices.size(),
-                                    selectedEdges.size());
-            }
+    if (wasMouseMoved) return;
+    std::cout << "Clicked. Current mode: " << clickMode << std::endl;
+    if (clickMode == 1) {
+        QVector2D coord = convertCurrentPointFromMapToCoords({(float) e->x(), (float) e->y()});
+        Vertex *found = graph->getTheClosestVertex(coord.x(), coord.y(), 0.1);
+        if (found != nullptr) {
+            selectVertex(found);
+            prepareVertexToDraw();
+            update();
+            emit amountsChanged(graph->vertices.size(),
+                                graph->edges.size(),
+                                selectedVertices.size(),
+                                selectedEdges.size());
+
         }
+        return;
+    }
+
+    if (clickMode == 2){
+        QVector2D coord = convertCurrentPointFromMapToCoords({(float) e->x(), (float) e->y()});
+        graph->addVertex(new Vertex(-1, coord.x(), coord.y()));
+        emit amountsChanged(graph->vertices.size(),
+                            graph->edges.size(),
+                            selectedVertices.size(),
+                            selectedEdges.size());
+        prepareVertexToDraw();
+        update();
+        return;
+    }
+
+    if (clickMode == 3){
+        return;
     }
 }
 
@@ -331,6 +342,11 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     printf("%d = %s\n", e->key(), e->text().toStdString().c_str());
     int key = e->key();
 
+    if (/* 1 */49 <= key && key <= 51/* 3 */){
+        emit clickModeChangedByKey(uint(key) - 49);
+        clickMode = uint(key) - 48;
+    }
+
     //highlight vertices
     if (key == /* h */72 || key == /* р */1056){
         vertexSizeSlider->setVisible(!vertexSizeSlider->isVisible());
@@ -342,11 +358,12 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     //connect vertices
     int count = 0;
     if ((key == /* c */67 || key == /* c */1057) && selectedVertices.size() >= 2){
-        for (int i = 0; i < selectedVertices.size(); i++){
-            for (int j = i + 1; j < selectedVertices.size(); j++){
+        for (auto i = selectedVertices.begin(); i != selectedVertices.end(); i++){
+            for (auto j = i; j != selectedVertices.end(); j++){
+                if (j == i) continue;
                 count++;
-                graph->addEdge(new Edge(selectedVertices[i],
-                        selectedVertices[j], -1));
+                graph->addEdge(new Edge(i->second,
+                        j->second, -1));
             }
         }
         std::cout << count << std::endl;
@@ -440,15 +457,12 @@ void CustomOpenGLWidget::prepareVertexToDraw() {
     vtColors = new float[graph->vertices.size() * 3];
     i = 0;
     for (auto v : graph->vertices){
-        vtColors[i] = .7f;
-        vtColors[i + 1] = .0f;
-        vtColors[i + 2] = .2f;
-        for (auto sv : selectedVertices){
-            if (sv == v.second) {
-                vtColors[i] = .0f;
-                vtColors[i + 1] = .7f;
-                break;
-            }
+        vtColors[i] = .99f;
+        vtColors[i + 1] = .99f;
+        vtColors[i + 2] = .99f;
+        if (selectedVertices.find(v.second->id) != selectedVertices.end()) {
+            vtColors[i] = .0f;
+            vtColors[i + 1] = .7f;
         }
         i += 3;
     }
@@ -471,5 +485,16 @@ void CustomOpenGLWidget::clearSelectedEdges() {
                         graph->edges.size(),
                         selectedVertices.size(),
                         selectedEdges.size());
+}
+
+bool CustomOpenGLWidget::selectVertex(Vertex *v) {
+    std::cout << v->get_info() << std::endl;
+    auto it = selectedVertices.find(v->id);
+    if (it == selectedVertices.end()){
+        selectedVertices.insert({v->id, v});
+        return true;
+    }
+    selectedVertices.erase(it);
+    return false;
 }
 

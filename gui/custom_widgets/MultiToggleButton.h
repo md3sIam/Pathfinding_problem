@@ -24,6 +24,7 @@ public:
 
 public slots:
     void changeValue();
+    void changeValue(uint);
 
 signals:
     void valueChanged(uint state);

@@ -5,7 +5,7 @@
 #ifndef PATHFINDING_PROBLEM_CUSTOMOPENGLWIDGET_H
 #define PATHFINDING_PROBLEM_CUSTOMOPENGLWIDGET_H
 
-
+#include <map>
 #include <QWidget>
 #include <QLabel>
 #include <QSlider>
@@ -32,8 +32,7 @@ public slots:
 
 signals:
     void amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long);
-    void verticesConnected();
-    void verticesDropped();
+    void clickModeChangedByKey(uint);
 
 protected:
     //INTERFACE
@@ -59,8 +58,8 @@ protected:
     float* vtColors = nullptr;
     bool wasMouseMoved;
     bool vertexHighlight = false;
-    std::vector<Vertex*> selectedVertices;
-    std::vector<Edge*> selectedEdges;
+    std::map<long, Vertex*> selectedVertices;
+    std::map<unsigned long, Edge*> selectedEdges;
 
 
     QOpenGLShaderProgram* load_shaders(const std::string& v, const std::string& f, const std::string& g = "");
@@ -88,6 +87,8 @@ private:
 
     void clearSelectedVertices();
     void clearSelectedEdges();
+
+    bool selectVertex(Vertex* v);
 
     QVector2D convertPointFromMapToCanvas(const QVector2D &v);
     QVector2D convertPointFromCanvasToMap(const QVector2D &v);

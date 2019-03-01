@@ -46,3 +46,9 @@ void MultiToggleButton::changeValue() {
     }
 }
 
+void MultiToggleButton::changeValue(uint s) {
+    buttons[state]->setChecked(false);
+    buttons[s]->setChecked(true);
+    state = s;
+}
+

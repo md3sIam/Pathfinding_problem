@@ -31,12 +31,12 @@ void drawCircles(){
 
         gl_Position = points[i];
         f_color = g_color[0];
-        f_color *= 0.95;
+        f_color *= 0.98;
         EmitVertex();
 
         gl_Position = points[(i + 1) % 16];
         f_color = g_color[0];
-        f_color *= 0.95;
+        f_color *= 0.98;
         EmitVertex();
         EndPrimitive();
     }

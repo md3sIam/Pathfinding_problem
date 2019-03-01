@@ -48,7 +48,7 @@ Vertex::~Vertex() {
     std::vector<Edge*>().swap(incidentEdges);
 }
 
-std::string Vertex::get_info() {
+std::string Vertex::get_info() const {
     std::string info;
     info += std::string("ID: ") + std::to_string(id);
     info += std::string("\nx: ") + std::to_string(lon);
