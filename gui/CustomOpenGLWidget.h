@@ -29,10 +29,12 @@ public:
 public slots:
     void changeVertexSize(int value);
     void changeClickMode(uint mode);
+    void highlightSl(bool);
 
 signals:
     void amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long);
     void clickModeChangedByKey(uint);
+    void highlightSig(bool);
 
 protected:
     //INTERFACE

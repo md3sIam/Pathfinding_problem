@@ -20,14 +20,16 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
           zoomAngle(0)
 {
     setFocusPolicy(Qt::StrongFocus);
-
+    connect(this, SIGNAL(highlightSig(bool)), this, SLOT(highlightSl(bool)));
     //Setting MultiToggleButton
     QVector<QString> names = {"Select vertices",
                               "Create vertices",
                               "Select edges"};
     mtb = new MultiToggleButton(names, this);
+    mtb->setVisible(false);
     connect(mtb, SIGNAL(valueChanged(uint)), this, SLOT(changeClickMode(uint)));
     connect(this, SIGNAL(clickModeChangedByKey(uint)), mtb, SLOT(changeValue(uint)));
+    connect(this, SIGNAL(highlightSig(bool)), mtb, SLOT(setVisible(bool)));
     clickMode = mtb->getState() + 1;
 
     //Setting MapInfo
@@ -45,6 +47,7 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
     vertexSizeSlider->setVisible(false);
     connect(vertexSizeSlider, SIGNAL(valueChanged(int)),
             this, SLOT(changeVertexSize(int)));
+    connect(this, SIGNAL(highlightSig(bool)), vertexSizeSlider, SLOT(setVisible(bool)));
 
 }
 
@@ -55,7 +58,11 @@ void CustomOpenGLWidget::changeVertexSize(int value) {
 
 void CustomOpenGLWidget::changeClickMode(uint mode) {
     clickMode = mode + 1;
+}
 
+void CustomOpenGLWidget::highlightSl(bool h) {
+    vertexHighlight = h;
+    update();
 }
 
 CustomOpenGLWidget::~CustomOpenGLWidget()
@@ -285,7 +292,7 @@ void CustomOpenGLWidget::mousePressEvent(QMouseEvent *e) {
 }
 
 void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
-    if (wasMouseMoved) return;
+    if (wasMouseMoved || !vertexHighlight) return;
     std::cout << "Clicked. Current mode: " << clickMode << std::endl;
     if (clickMode == 1) {
         QVector2D coord = convertCurrentPointFromMapToCoords({(float) e->x(), (float) e->y()});
@@ -367,8 +374,7 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
 
     //highlight vertices
     if (key == /* h */72 || key == /* р */1056){
-        vertexSizeSlider->setVisible(!vertexSizeSlider->isVisible());
-        vertexHighlight = !vertexHighlight;
+        emit highlightSig(!vertexHighlight);
         update();
         return;
     }
@@ -502,10 +508,10 @@ void CustomOpenGLWidget::prepareEdgesToDraw(){
         preparedEdges[i + 2] = (float) pair.second->vTo->lon;
         preparedEdges[i + 3] = (float) pair.second->vTo->lat;
         edgesColors[j] = .0f;
-        edgesColors[j + 1] = .7f;
+        edgesColors[j + 1] = .5f;
         edgesColors[j + 2] = .99f;
         edgesColors[j + 3] = .0f;
-        edgesColors[j + 4] = .7f;
+        edgesColors[j + 4] = .5f;
         edgesColors[j + 5] = .99f;
         i += 4;
         j += 6;
