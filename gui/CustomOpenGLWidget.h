@@ -53,13 +53,18 @@ protected:
     float zoomAngle;
     float recentShiftX,
         recentShiftY;
-    float* preparedEdges = nullptr;
-    float* vertexTriangles = nullptr;
-    float* vtColors = nullptr;
     bool wasMouseMoved;
     bool vertexHighlight = false;
+
+    //SELECTIONS
     std::map<long, Vertex*> selectedVertices;
     std::map<unsigned long, Edge*> selectedEdges;
+
+    //SELECTIONS FOR OPENGL
+    float* preparedEdges = nullptr;
+    float* edgesColors = nullptr;
+    float* vertexTriangles = nullptr;
+    float* vtColors = nullptr;
 
 
     QOpenGLShaderProgram* load_shaders(const std::string& v, const std::string& f, const std::string& g = "");
@@ -79,7 +84,7 @@ protected:
 //    void resizeEvent(QResizeEvent* e) override;
 
 private:
-    void drawGraph(QOpenGLFunctions* f) const;
+    void drawEdges(QOpenGLFunctions* f) const;
     void highlightVertices(QOpenGLFunctions* f) const;
 
     void prepareEdgesToDraw();
@@ -89,6 +94,7 @@ private:
     void clearSelectedEdges();
 
     bool selectVertex(Vertex* v);
+    bool selectEdge(Edge *e);
 
     QVector2D convertPointFromMapToCanvas(const QVector2D &v);
     QVector2D convertPointFromCanvasToMap(const QVector2D &v);

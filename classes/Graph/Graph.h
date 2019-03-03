@@ -40,8 +40,14 @@ public:
     void addVertex(Vertex* vertex);
     void addEdge(Edge* edge);
 
+    void removeVertex(Vertex* v);
+    void removeEdge(Edge* e);
+
+    std::vector<Vertex*> getIncidentVertices(Vertex* v);
+
     int read_graph_from_files(std::string, std::string);
     Vertex* getTheClosestVertex(float x, float y, float radius = 100);
+    Edge* getTheClosestEdge(float x, float y, float radius = 100);
 
     void get_info();
 

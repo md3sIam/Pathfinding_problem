@@ -142,6 +142,22 @@ Vertex* Graph::getTheClosestVertex(float x, float y, float radius) {
     return res;
 }
 
+Edge* Graph::getTheClosestEdge(float x, float y, float r) {
+    Edge* res = nullptr;
+    Vertex* closestVertex = getTheClosestVertex(x, y, r);
+    float minDist = -1;
+    for (auto it = closestVertex->incidentEdges.begin(); it != closestVertex->incidentEdges.end(); it++){
+        Vertex* v = closestVertex == (*it)->vFrom ? (*it)->vTo : (*it)->vFrom;
+        float dist = (v->lon - x) * (v->lon - x) +
+                     (v->lat - y) * (v->lat - y);
+        if (minDist == -1 || minDist > dist){
+            res = *it;
+            minDist = dist;
+        }
+    }
+    return res;
+}
+
 void Graph::get_info() {
     for (auto pair : vertices){
         std::cout << pair.second->get_info() << "\n\n";
@@ -200,4 +216,51 @@ void Graph::addEdge(Edge *edge) {
                   expectedId << "} was changed on {" << edge->id << "}" << std::endl;
     }
     edges.insert({edge->id, edge});
+    edge->vTo->incidentEdges.push_back(edge);
+    edge->vFrom->incidentEdges.push_back(edge);
+}
+
+std::vector<Vertex*> Graph::getIncidentVertices(Vertex *v) {
+    std::vector<Vertex*> result;
+    for (auto edge : v->incidentEdges){
+        Vertex* vToAdd = v == edge->vTo ? edge->vFrom : edge->vTo;
+    }
+}
+
+void Graph::removeVertex(Vertex *v) {
+    //REMOVING THIS WAY BECAUSE ITERATOR GANDONITSYA
+    std::vector<Edge*> toremove;
+    for (auto it = v->incidentEdges.begin(); it != v->incidentEdges.end(); it++){
+        //Removing edges from vectors of incident vertices for given vertex
+        toremove.push_back(*it);
+    }
+    for (Edge* edge : toremove){
+        removeEdge(edge);
+    }
+    vertices.erase(vertices.find(v->id));
+    delete v;
+}
+
+void Graph::removeEdge(Edge *e) {
+    //Removing edge from vector of incident edges of vertex-from
+    Vertex* vertex = e->vFrom;
+    for (auto it = vertex->incidentEdges.begin(); it != vertex->incidentEdges.end(); it++){
+        if ((*it) == e){
+            vertex->incidentEdges.erase(it);
+            break;
+        }
+    }
+    //Removing edge from vector of incident edges of vertex-to
+    vertex = e->vTo;
+    for (auto it = vertex->incidentEdges.begin(); it != vertex->incidentEdges.end(); it++){
+        if ((*it) == e){
+            vertex->incidentEdges.erase(it);
+            break;
+        }
+    }
+    //Removing edge
+    std::cout << edges.size() << std::endl;
+    edges.erase(e->id);
+    std::cout << edges.size() << std::endl;
+    delete e;
 }
