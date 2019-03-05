@@ -49,14 +49,15 @@ protected:
     QOpenGLShaderProgram* vertexShaderProgram;
     int initialWidth, initialHeight;
     float vertexRadius = 6;
-    float zoom,
-        shiftX,
-        shiftY;
-    float zoomAngle;
-    float recentShiftX,
-        recentShiftY;
+    float zoom = 1,
+        shiftX = 0,
+        shiftY = 0;
+    float zoomAngle = 0;
+    float recentShiftX = 0,
+        recentShiftY = 0;
     bool wasMouseMoved;
     bool vertexHighlight = false;
+    int arrowShiftSpeed = 20;
 
     //SELECTIONS
     std::map<long, Vertex*> selectedVertices;
@@ -86,6 +87,8 @@ protected:
 //    void resizeEvent(QResizeEvent* e) override;
 
 private:
+    void restoreDefaultView();
+
     void drawEdges(QOpenGLFunctions* f) const;
     void highlightVertices(QOpenGLFunctions* f) const;
 

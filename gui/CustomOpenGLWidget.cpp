@@ -79,7 +79,16 @@ CustomOpenGLWidget::~CustomOpenGLWidget()
 }
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
+    restoreDefaultView();
+    if (graph != nullptr) delete graph;
     graph = g;
+    prepareEdgesToDraw();
+    prepareVertexToDraw();
+    update();
+    emit amountsChanged(graph->vertices.size(),
+                        graph->edges.size(),
+                        selectedVertices.size(),
+                        selectedEdges.size());
 }
 
 void CustomOpenGLWidget::initializeGL()
@@ -367,9 +376,38 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     printf("%d = %s\n", e->key(), e->text().toStdString().c_str());
     int key = e->key();
 
+    if (/*arrow up*/key == 16777235){
+        std::cout << "up arrow\n";
+        shiftY += arrowShiftSpeed / zoom;
+        update();
+        return;
+    }
+
+    if (/*arrow down*/key == 16777237){
+        std::cout << "down arrow\n";
+        shiftY -= arrowShiftSpeed / zoom;
+        update();
+        return;
+    }
+
+    if (/*arrow right*/key == 16777236){
+        std::cout << "right arrow\n";
+        shiftX -= arrowShiftSpeed / zoom;
+        update();
+        return;
+    }
+
+    if (/*arrow left*/key == 16777234){
+        std::cout << "left arrow\n";
+        shiftX += arrowShiftSpeed / zoom;
+        update();
+        return;
+    }
+
     if (/* 1 */49 <= key && key <= 51/* 3 */){
         emit clickModeChangedByKey(uint(key) - 49);
         clickMode = uint(key) - 48;
+        return;
     }
 
     //highlight vertices
@@ -591,5 +629,17 @@ bool CustomOpenGLWidget::selectEdge(Edge *e){
     }
     selectedEdges.erase(it);
     return false;
+}
+
+void CustomOpenGLWidget::restoreDefaultView() {
+    zoom = 1;
+    shiftX = 0;
+    shiftY = 0;
+    zoomAngle = 0;
+    recentShiftX = 0;
+    recentShiftY = 0;
+    initialWidth = width();
+    initialHeight = height();
+    update();
 }
 

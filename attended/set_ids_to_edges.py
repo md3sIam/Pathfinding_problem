@@ -1,5 +1,5 @@
-file_read = open("../maps/roads/SPb3_roads.csv", "r")
-file_write = open("../maps/roads/SPb3_id_roads.csv", "w")
+file_read = open("../maps/open_test/NY_roads.csv", "r")
+file_write = open("../maps/open_test/Toronto_id_roads.csv", "w")
 
 current_id = 0
 first_line = True

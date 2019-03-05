@@ -43,5 +43,4 @@ void MapInfo::updateValues(unsigned long va, unsigned long ea,
     lcds[1]->setText(QString::number(ea));
     lcds[2]->setText(QString::number(sva));
     lcds[3]->setText(QString::number(sea));
-
 }

@@ -7,6 +7,7 @@
 
 #include <QMainWindow>
 #include <QOpenGLWidget>
+#include <QFileDialog>
 
 namespace Ui {
     class MainWindow;
@@ -24,6 +25,10 @@ public:
 
 private:
     Ui::MainWindow* ui;
+
+private slots:
+    void fileChooser();
+    void printFileName(const QString& str);
 
 
 };
