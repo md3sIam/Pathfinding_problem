@@ -84,8 +84,6 @@ protected:
     //KEY EVENTS
     void keyPressEvent(QKeyEvent* e) override;
 
-//    void resizeEvent(QResizeEvent* e) override;
-
 private:
     void restoreDefaultView();
 

@@ -67,7 +67,7 @@ void Graph::read_vertices(const std::string &filename) {
     std::ifstream fs(filename);
     if (!fs){
         std::string msg("File not found: ");
-        msg += filename + '\n';
+        msg += filename + "\n";
         throw std::runtime_error(msg);
     }
     std::string s;
@@ -99,7 +99,7 @@ void Graph::read_edges(const std::string &filename) {
     std::ifstream fs(filename);
     if (!fs){
         std::string msg("File not found: ");
-        msg += filename + '\n';
+        msg += filename + "\n";
         throw std::runtime_error(msg);
     }
     std::string s;
@@ -263,4 +263,46 @@ void Graph::removeEdge(Edge *e) {
     edges.erase(e->id);
     std::cout << edges.size() << std::endl;
     delete e;
+}
+
+void Graph::read_binary(const std::string &filename) {
+    std::ifstream file;
+    file.open(filename, std::ios::in /*| std::ios::binary*/);
+    std::cout << file.is_open() << std::endl;
+    //reading vertices
+    char memblock[sizeof(long) + 2 * sizeof(double)];
+    long id;
+    double lon, lat;
+    do {
+        file.read(memblock, sizeof(memblock));
+        id = *(long*)memblock;
+        lat = *(double*)(memblock + sizeof(long));
+        lon = *(double*)(memblock + sizeof(long) + sizeof(double));
+        /*std::cout << id << std::endl << lat << std::endl << lon
+                    << std::endl << std::endl;*/
+        if (!(id == 0 && lon == 0 && lat == 0)){
+            auto vertex = new Vertex(id, lon, lat);
+            vertices.insert({id, vertex});
+            checkForMaxMin(*vertex);
+        }
+    } while (!(id == 0 && lon == 0 && lat == 0));
+
+    //reading edges
+    char memblock2[3 * sizeof(long) + sizeof(double)];
+    unsigned long id2;
+    long idfrom, idto;
+    double weight;
+    do {
+        file.read(memblock2, sizeof(memblock2));
+        id2 = *(unsigned long*)memblock2;
+        idfrom = *(long*)(memblock2 + sizeof(unsigned long));
+        idto = *(long*)(memblock2 + sizeof(unsigned long) + sizeof(long));
+        weight = *(double *)(memblock2 + sizeof(unsigned long) + 2 * sizeof(long));
+        if (!(id2 == 0 && idfrom == 0 && idto == 0 && weight == 0)){
+            auto edge = new Edge(id2, vertices[idfrom], vertices[idto], weight);
+            edges.insert({id2, edge});
+        }
+    } while (!(id2 == 0 && idfrom == 0 && idto == 0 && weight == 0));
+    file.close();
+    normalize();
 }

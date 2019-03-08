@@ -17,8 +17,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     //Reading ans setting the graph
     auto g = new Graph;
-    g->read_graph_from_files("../maps/nodes/SPb3_nodes.csv",
-                             "../maps/roads/SPb3_id_roads.csv");
+//    g->read_graph_from_files("../maps/nodes/SPb3_nodes.csv", "../maps/roads/SPb3_id_roads.csv");
+    g->read_binary("../maps/binaries/spb3.graph");
     std::cout << "Graph is read\n";
     ui->mapWidget->setGraph(g);
 
@@ -46,11 +46,10 @@ QOpenGLWidget* MainWindow::getOpenGLContext() {
 
 void MainWindow::fileChooser() {
 //    printFileName(QFileDialog::getOpenFileName(this, tr("Open file")));
-    QStringList list = QFileDialog::getOpenFileNames(this,tr("Select files"));
-    if (list.size() > 1) {
+    QString filename = QFileDialog::getOpenFileName(this,tr("Select files"));
+    if (filename.length() > 1) {
         auto g = new Graph;
-        std::cout << list[1].toStdString() << std::endl << list[0].toStdString() << std::endl;
-        g->read_graph_from_files(list[1].toStdString(), list[0].toStdString());
+        g->read_binary(filename.toStdString());
         ui->mapWidget->setGraph(g);
     }
 }
