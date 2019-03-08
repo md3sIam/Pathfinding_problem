@@ -82,6 +82,8 @@ void CustomOpenGLWidget::setGraph(Graph *g) {
     restoreDefaultView();
     if (graph != nullptr) delete graph;
     graph = g;
+    std::cout << graph->vertices.size() << '\n';
+    std::cout << graph->edges.size() << '\n';
     prepareEdgesToDraw();
     prepareVertexToDraw();
     update();
@@ -561,7 +563,7 @@ void CustomOpenGLWidget::prepareVertexToDraw() {
     if (vtColors != nullptr) delete [] vtColors;
 
     //Setting coordinates and colors of not selected
-    vertexTriangles = new float[graph->vertices.size() * 2]{0};
+    vertexTriangles = new float[graph->vertices.size() * 2];
     vtColors = new float[graph->vertices.size() * 3];
     int i = 0;
     int j = 0;
