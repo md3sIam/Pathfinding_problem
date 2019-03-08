@@ -47,6 +47,9 @@ public:
 
     int read_graph_from_files(std::string, std::string);
     void read_binary(const std::string &filename);
+
+    void save_to_binary(const std::string &filename);
+
     Vertex* getTheClosestVertex(float x, float y, float radius = 100);
     Edge* getTheClosestEdge(float x, float y, float radius = 100);
 

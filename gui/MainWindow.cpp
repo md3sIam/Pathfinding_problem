@@ -16,14 +16,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setMinimumHeight(768);
 
     //Reading ans setting the graph
-    auto g = new Graph;
+    graph = new Graph;
 //    g->read_graph_from_files("../maps/nodes/SPb3_nodes.csv", "../maps/roads/SPb3_id_roads.csv");
-    g->read_binary("../maps/binaries/spb3.graph");
+    current_filename = "../maps/binaries/spb3.graph";
+    graph->read_binary(current_filename);
     std::cout << "Graph is read\n";
-    ui->mapWidget->setGraph(g);
+    ui->mapWidget->setGraph(graph);
 
     //Setting up actions
-    connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileChooser()));
+    connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
+    connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
+    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
+    connect(ui->actionSave_as, SIGNAL(triggered()), this, SLOT(fileSave_as()));
 }
 
 MainWindow::~MainWindow() {
@@ -44,13 +48,32 @@ QOpenGLWidget* MainWindow::getOpenGLContext() {
     return ui->mapWidget;
 }
 
-void MainWindow::fileChooser() {
+void MainWindow::fileNew(){
+    graph = new Graph;
+    ui->mapWidget->setGraph(graph);
+}
+
+void MainWindow::fileOpen() {
 //    printFileName(QFileDialog::getOpenFileName(this, tr("Open file")));
-    QString filename = QFileDialog::getOpenFileName(this,tr("Select files"));
+    QString filename = QFileDialog::getOpenFileName(this,
+            tr("Select graph"), "../maps/binaries", tr("Binary files (*.graph)"));
     if (filename.length() > 1) {
-        auto g = new Graph;
-        g->read_binary(filename.toStdString());
-        ui->mapWidget->setGraph(g);
+        graph = new Graph;
+        graph->read_binary(filename.toStdString());
+        ui->mapWidget->setGraph(graph);
+        current_filename = filename.toStdString();
+    }
+}
+
+void MainWindow::fileSave() {
+    graph->save_to_binary(current_filename);
+}
+
+void MainWindow::fileSave_as() {
+    QString filename = QFileDialog::getSaveFileName(this,
+            tr("Choose a file to save"), "../maps/binaries", tr("Binary files (*.graph)"));
+    if (filename.length() > 1){
+        graph->save_to_binary(filename.toStdString());
     }
 }
 

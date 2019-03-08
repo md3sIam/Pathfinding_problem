@@ -267,9 +267,12 @@ void Graph::removeEdge(Edge *e) {
 
 void Graph::read_binary(const std::string &filename) {
     std::ifstream file;
-    file.open(filename, std::ios::in /*| std::ios::binary*/);
-    std::cout << file.is_open() << std::endl;
-    //reading vertices
+    file.open(filename, std::ios::in | std::ios::binary);
+
+    if (!file.is_open()){
+        throw std::runtime_error("Binary file is not opened");
+    }
+
     char memblock[sizeof(long) + 2 * sizeof(double)];
     long id;
     double lon, lat;
@@ -305,4 +308,46 @@ void Graph::read_binary(const std::string &filename) {
     } while (!(id2 == 0 && idfrom == 0 && idto == 0 && weight == 0));
     file.close();
     normalize();
+}
+
+void Graph::save_to_binary(const std::string &filename) {
+    std::ofstream file;
+    file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!file.is_open()){
+        throw std::runtime_error("Binary file was not opened to write graph");
+    }
+
+    //Writing vertices
+    char* memblock_long;
+    char* memblock_double;
+    for (auto pair : vertices){
+        memblock_long = (char*)&(pair.second->id);
+        file.write(memblock_long, sizeof(long));
+        memblock_double = (char*)&(pair.second->lat);
+        file.write(memblock_double, sizeof(double));
+        memblock_double = (char*)&(pair.second->lon);
+        file.write(memblock_double, sizeof(double));
+    }
+
+    //Writing separator 1 (vertices | edges)
+    char byte_separator1[sizeof(long) + 2 * sizeof(double)]{0};
+    file.write(byte_separator1, sizeof(byte_separator1));
+
+    //Writing edges
+    for (auto pair : edges){
+        memblock_long = (char*)&(pair.second->id);
+        file.write(memblock_long, sizeof(unsigned long));
+        memblock_long = (char*)&(pair.second->vFrom->id);
+        file.write(memblock_long, sizeof(long));
+        memblock_long = (char*)&(pair.second->vTo->id);
+        file.write(memblock_long, sizeof(long));
+        memblock_double = (char*)&(pair.second->weight);
+        file.write(memblock_double, sizeof(double));
+    }
+
+    //Writing separator 2 ( edges | features)
+    char byte_separator2[sizeof(unsigned long) + 2 * sizeof(long) + sizeof(double)]{0};
+    file.write(byte_separator2, sizeof(byte_separator2));
+
+    file.close();
 }

@@ -13,6 +13,8 @@ namespace Ui {
     class MainWindow;
 }
 
+class Graph;
+
 
 class MainWindow : public QMainWindow {
 
@@ -25,9 +27,14 @@ public:
 
 private:
     Ui::MainWindow* ui;
+    std::string current_filename;
+    Graph* graph;
 
 private slots:
-    void fileChooser();
+    void fileNew();
+    void fileOpen();
+    void fileSave();
+    void fileSave_as();
     void printFileName(const QString& str);
 
 
