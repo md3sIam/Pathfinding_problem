@@ -130,7 +130,7 @@ Vertex& Graph::get_vertex_by_id(long id) {
 
 Vertex* Graph::getTheClosestVertex(float x, float y, float radius) {
     Vertex* res = nullptr;
-    float minDist = radius * radius + 1;
+    float minDist = radius * radius;
     for (auto v : vertices){
         float dist = (v.second->lon - x) * (v.second->lon - x) +
                    (v.second->lat - y) * (v.second->lat - y);

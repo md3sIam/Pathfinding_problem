@@ -81,6 +81,8 @@ CustomOpenGLWidget::~CustomOpenGLWidget()
 void CustomOpenGLWidget::setGraph(Graph *g) {
     restoreDefaultView();
     if (graph != nullptr) delete graph;
+    selectedVertices.clear();
+    selectedEdges.clear();
     graph = g;
     std::cout << graph->vertices.size() << '\n';
     std::cout << graph->edges.size() << '\n';
@@ -304,10 +306,11 @@ void CustomOpenGLWidget::mousePressEvent(QMouseEvent *e) {
 
 void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
     if (wasMouseMoved || !vertexHighlight) return;
-    std::cout << "Clicked. Current mode: " << clickMode << std::endl;
+    //std::cout << "Clicked. Current mode: " << clickMode << std::endl;
     if (clickMode == 1) {
         QVector2D coord = convertCurrentPointFromMapToCoords({(float) e->x(), (float) e->y()});
-        Vertex *found = graph->getTheClosestVertex(coord.x(), coord.y(), 0.1);
+        float radius = convertDistFromPixToCoords(pixelRadiusClickAreaSearch);
+        Vertex *found = graph->getTheClosestVertex(coord.x(), coord.y(), radius);
         if (found != nullptr) {
             selectVertex(found);
             prepareVertexToDraw();
@@ -375,45 +378,41 @@ void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
 }
 
 void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
-    printf("%d = %s\n", e->key(), e->text().toStdString().c_str());
+    //printf("%d = %s\n", e->key(), e->text().toStdString().c_str());
     int key = e->key();
 
     if (/*arrow up*/key == 16777235){
-        std::cout << "up arrow\n";
         shiftY += arrowShiftSpeed / zoom;
         update();
         return;
     }
 
     if (/*arrow down*/key == 16777237){
-        std::cout << "down arrow\n";
         shiftY -= arrowShiftSpeed / zoom;
         update();
         return;
     }
 
     if (/*arrow right*/key == 16777236){
-        std::cout << "right arrow\n";
         shiftX -= arrowShiftSpeed / zoom;
         update();
         return;
     }
 
     if (/*arrow left*/key == 16777234){
-        std::cout << "left arrow\n";
-        shiftX += arrowShiftSpeed / zoom;
+            shiftX += arrowShiftSpeed / zoom;
         update();
         return;
     }
 
-    if (/* 1 */49 <= key && key <= 51/* 3 */){
-        emit clickModeChangedByKey(uint(key) - 49);
-        clickMode = uint(key) - 48;
+    if (/* 1 */Qt::Key_1 <= key && key <= Qt::Key_3/* 3 */){
+        emit clickModeChangedByKey(uint(key - Qt::Key_1));
+        clickMode = uint(key - Qt::Key_1 + 1);
         return;
     }
 
     //highlight vertices
-    if (key == /* h */72 || key == /* р */1056){
+    if (key == Qt::Key_H || key == /* р */1056){
         emit highlightSig(!vertexHighlight);
         update();
         return;
@@ -421,7 +420,7 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
 
     //connect vertices
     int count = 0;
-    if ((key == /* c */67 || key == /* c */1057) && selectedVertices.size() >= 2){
+    if ((key == Qt::Key_C || key == /* c */1057) && selectedVertices.size() >= 2){
         for (auto i = selectedVertices.begin(); i != selectedVertices.end(); i++){
             for (auto j = i; j != selectedVertices.end(); j++){
                 if (j == i) continue;
@@ -443,14 +442,14 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     }
 
     //unselect (drop select)
-    if (key == /* d */68 || key == /* в */1042){
+    if (key == Qt::Key_D || key == /* в */1042){
         clearSelectedVertices();
         clearSelectedEdges();
         update();
         return;
     }
 
-    if (key == /* r */82 || key == /* к */1050){
+    if (key == Qt::Key_R|| key == /* к */1050){
         for (auto pair : selectedEdges){
             graph->removeEdge(pair.second);
         }
@@ -467,6 +466,10 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
         prepareVertexToDraw();
         update();
         return;
+    }
+
+    if (key == Qt::Key_S && e->modifiers().testFlag(Qt::ControlModifier)){
+        emit save();
     }
 }
 
@@ -502,6 +505,18 @@ QVector2D CustomOpenGLWidget::convertFromMapToCoords(const QVector2D &v) {
     res.setX(v.x() / width() * deltaX + graph->minX);
     res.setY((height() - v.y()) / height() * deltaY + graph->minY);
     return res;
+}
+
+float CustomOpenGLWidget::convertDistFromPixToCoords(int d) {
+    float x = float(d) / width() * (graph->maxX - graph->minX) / zoom;
+    float y = float(d) / height() * (graph->maxY - graph->minY) / zoom;
+    std::cout << d << std::endl;
+    std::cout << width() << std::endl;
+    std::cout << height() << std::endl;
+    std::cout << (graph->maxX - graph->minX) << std::endl;
+    std::cout << (graph->maxY - graph->minY) << std::endl;
+    std::cout << x << '\n' << y << std::endl;
+    return x > y ? x : y;
 }
 
 QVector2D CustomOpenGLWidget::convertCurrentPointFromMapToCoords(const QVector2D &v) {

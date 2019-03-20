@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
+    connect(ui->mapWidget, SIGNAL(save()), this, SLOT(fileSave()));
     connect(ui->actionSave_as, SIGNAL(triggered()), this, SLOT(fileSave_as()));
 }
 
@@ -49,6 +50,7 @@ QOpenGLWidget* MainWindow::getOpenGLContext() {
 }
 
 void MainWindow::fileNew(){
+    current_filename = "";
     graph = new Graph;
     ui->mapWidget->setGraph(graph);
 }
@@ -66,14 +68,20 @@ void MainWindow::fileOpen() {
 }
 
 void MainWindow::fileSave() {
-    graph->save_to_binary(current_filename);
+    if (current_filename.length() > 1) {
+        graph->save_to_binary(current_filename);
+    }
+    else{
+        fileSave_as();
+    }
 }
 
 void MainWindow::fileSave_as() {
     QString filename = QFileDialog::getSaveFileName(this,
             tr("Choose a file to save"), "../maps/binaries", tr("Binary files (*.graph)"));
     if (filename.length() > 1){
-        graph->save_to_binary(filename.toStdString());
+        current_filename = filename.toStdString();
+        fileSave();
     }
 }
 

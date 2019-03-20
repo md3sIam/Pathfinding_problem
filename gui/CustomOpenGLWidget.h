@@ -21,6 +21,7 @@
 class CustomOpenGLWidget : public QOpenGLWidget
 {
     Q_OBJECT
+
 public:
     explicit CustomOpenGLWidget(QWidget *parent = 0);
     ~CustomOpenGLWidget() override;
@@ -32,6 +33,7 @@ public slots:
     void highlightSl(bool);
 
 signals:
+    void save();
     void amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long);
     void clickModeChangedByKey(uint);
     void highlightSig(bool);
@@ -58,6 +60,7 @@ protected:
     bool wasMouseMoved;
     bool vertexHighlight = false;
     int arrowShiftSpeed = 20;
+    int pixelRadiusClickAreaSearch = 100;
 
     //SELECTIONS
     std::map<long, Vertex*> selectedVertices;
@@ -103,6 +106,7 @@ private:
     QVector2D convertPointFromCanvasToMap(const QVector2D &v);
     QVector2D convertFromCoordsToMap(const QVector2D& v);
     QVector2D convertFromMapToCoords(const QVector2D& v);
+    float convertDistFromPixToCoords(int d);
 
     QVector2D convertCurrentPointFromMapToCoords(const QVector2D& v);
     QVector2D convertCurrentPointFromCoordsToMap(const QVector2D& v);
