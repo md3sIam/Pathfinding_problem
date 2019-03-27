@@ -17,18 +17,34 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     //Reading ans setting the graph
     graph = new Graph;
-//    g->read_graph_from_files("../maps/nodes/SPb3_nodes.csv", "../maps/roads/SPb3_id_roads.csv");
     current_filename = "../maps/binaries/spb3.graph";
     graph->read_binary(current_filename);
     std::cout << "Graph is read\n";
     ui->mapWidget->setGraph(graph);
 
-    //Setting up actions
+    //Setting up actions for toolbar
     connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
     connect(ui->mapWidget, SIGNAL(save()), this, SLOT(fileSave()));
     connect(ui->actionSave_as, SIGNAL(triggered()), this, SLOT(fileSave_as()));
+
+    //Setting up the EDITOR tab
+    ui->hl_v_radio->setChecked(false);
+    connect(ui->hl_v_radio, SIGNAL(toggled(bool)), ui->mapWidget, SLOT(highlightSl(bool)));
+    connect(ui->mapWidget, SIGNAL(highlightSig(bool)), ui->hl_v_radio, SLOT(toggle()));
+
+    //Connecting all buttons with appropriated slots
+    connect(ui->link_all_button, SIGNAL(pressed()), ui->mapWidget, SLOT(linkSelVerticesTogether()));
+    connect(ui->link_seq_button, SIGNAL(pressed()), ui->mapWidget, SLOT(linkSelVerticesSequentially()));
+    connect(ui->rm_sel_v_button, SIGNAL(pressed()), ui->mapWidget, SLOT(removeSelVertices()));
+    connect(ui->drop_sel_v_button, SIGNAL(pressed()), ui->mapWidget, SLOT(dropSelVertices()));
+
+    connect(ui->rm_sel_e_button, SIGNAL(pressed()), ui->mapWidget, SLOT(removeSelEdges()));
+    connect(ui->drop_sel_e_button, SIGNAL(pressed()), ui->mapWidget, SLOT(dropSelEdges()));
+
+    connect(ui->rm_sel_button, SIGNAL(pressed()), ui->mapWidget, SLOT(removeSelEdgesAndVertices()));
+    connect(ui->drop_sel_button, SIGNAL(pressed()), ui->mapWidget, SLOT(dropSelEdgesAndVertices()));
 }
 
 MainWindow::~MainWindow() {

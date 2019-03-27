@@ -19,9 +19,13 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
           recentShiftX(0), recentShiftY(0),
           zoomAngle(0)
 {
+    // Setting up parameters of widget
     setFocusPolicy(Qt::StrongFocus);
+
+    // Setting up inner signals and slot
     connect(this, SIGNAL(highlightSig(bool)), this, SLOT(highlightSl(bool)));
-    //Setting MultiToggleButton
+
+    // Setting MultiToggleButton
     QVector<QString> names = {"Select vertices",
                               "Create vertices",
                               "Select edges"};
@@ -29,11 +33,11 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
     mtb->setVisible(false);
     connect(mtb, SIGNAL(valueChanged(uint)), this, SLOT(changeClickMode(uint)));
     connect(this, SIGNAL(clickModeChangedByKey(uint)), mtb, SLOT(changeValue(uint)));
-    connect(this, SIGNAL(highlightSig(bool)), mtb, SLOT(setVisible(bool)));
     clickMode = mtb->getState() + 1;
 
     //Setting MapInfo
     info = new MapInfo(this);
+    info->move(10, 10);
     connect(this, SIGNAL(amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long)),
                 info, SLOT(updateValues(unsigned long, unsigned long, unsigned long,unsigned long)));
 
@@ -47,8 +51,6 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
     vertexSizeSlider->setVisible(false);
     connect(vertexSizeSlider, SIGNAL(valueChanged(int)),
             this, SLOT(changeVertexSize(int)));
-    connect(this, SIGNAL(highlightSig(bool)), vertexSizeSlider, SLOT(setVisible(bool)));
-
 }
 
 void CustomOpenGLWidget::changeVertexSize(int value) {
@@ -62,6 +64,8 @@ void CustomOpenGLWidget::changeClickMode(uint mode) {
 
 void CustomOpenGLWidget::highlightSl(bool h) {
     vertexHighlight = h;
+    mtb->setVisible(h);
+    vertexSizeSlider->setVisible(h);
     update();
 }
 
@@ -82,6 +86,7 @@ void CustomOpenGLWidget::setGraph(Graph *g) {
     restoreDefaultView();
     if (graph != nullptr) delete graph;
     selectedVertices.clear();
+    selectedVerticesOrder.clear();
     selectedEdges.clear();
     graph = g;
     std::cout << graph->vertices.size() << '\n';
@@ -421,23 +426,7 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     //connect vertices
     int count = 0;
     if ((key == Qt::Key_C || key == /* c */1057) && selectedVertices.size() >= 2){
-        for (auto i = selectedVertices.begin(); i != selectedVertices.end(); i++){
-            for (auto j = i; j != selectedVertices.end(); j++){
-                if (j == i) continue;
-                count++;
-                graph->addEdge(new Edge(i->second,
-                        j->second, -1));
-            }
-        }
-        std::cout << count << std::endl;
-        selectedVertices.clear();
-        prepareEdgesToDraw();
-        prepareVertexToDraw();
-        update();
-        emit amountsChanged(graph->vertices.size(),
-                            graph->edges.size(),
-                            selectedVertices.size(),
-                            selectedEdges.size());
+        linkAllSelectedVerticesTogether();
         return;
     }
 
@@ -450,21 +439,7 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     }
 
     if (key == Qt::Key_R|| key == /* к */1050){
-        for (auto pair : selectedEdges){
-            graph->removeEdge(pair.second);
-        }
-        for (auto pair : selectedVertices){
-            graph->removeVertex(pair.second);
-        }
-        selectedVertices.clear();
-        selectedEdges.clear();
-        emit amountsChanged(graph->vertices.size(),
-                            graph->edges.size(),
-                            selectedVertices.size(),
-                            selectedEdges.size());
-        prepareEdgesToDraw();
-        prepareVertexToDraw();
-        update();
+        removeSelEdgesAndVertices();
         return;
     }
 
@@ -609,6 +584,7 @@ void CustomOpenGLWidget::prepareVertexToDraw() {
 
 void CustomOpenGLWidget::clearSelectedVertices() {
     selectedVertices.clear();
+    selectedVerticesOrder.clear();
     prepareVertexToDraw();
     update();
     emit amountsChanged(graph->vertices.size(),
@@ -619,6 +595,7 @@ void CustomOpenGLWidget::clearSelectedVertices() {
 
 void CustomOpenGLWidget::clearSelectedEdges() {
     selectedEdges.clear();
+    prepareEdgesToDraw();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
@@ -631,9 +608,11 @@ bool CustomOpenGLWidget::selectVertex(Vertex *v) {
     auto it = selectedVertices.find(v->id);
     if (it == selectedVertices.end()){
         selectedVertices.insert({v->id, v});
+        selectedVerticesOrder.push_back(v);
         return true;
     }
     selectedVertices.erase(it);
+    selectedVerticesOrder.remove(v);
     return false;
 }
 
@@ -660,3 +639,97 @@ void CustomOpenGLWidget::restoreDefaultView() {
     update();
 }
 
+void CustomOpenGLWidget::linkAllSelectedVerticesTogether() {
+    for (auto i = selectedVertices.begin(); i != selectedVertices.end(); i++){
+        for (auto j = i; j != selectedVertices.end(); j++){
+            if (j == i) continue;
+            graph->addEdge(new Edge(i->second,
+                                    j->second, -1));
+        }
+    }
+    prepareEdgesToDraw();
+    prepareVertexToDraw();
+    update();
+    emit amountsChanged(graph->vertices.size(),
+                        graph->edges.size(),
+                        selectedVertices.size(),
+                        selectedEdges.size());
+}
+
+void CustomOpenGLWidget::linkSelVerticesTogether() {
+    linkAllSelectedVerticesTogether();
+}
+
+void CustomOpenGLWidget::linkSelectedVerticesSequentially() {
+    for (auto i = selectedVerticesOrder.begin(); i != selectedVerticesOrder.end();){
+        auto prev = i++;
+        if (i != selectedVerticesOrder.end())
+            graph->addEdge(new Edge(*prev, *i, -1));
+    }
+    prepareEdgesToDraw();
+    prepareVertexToDraw();
+    update();
+    emit amountsChanged(graph->vertices.size(),
+                        graph->edges.size(),
+                        selectedVertices.size(),
+                        selectedEdges.size());
+}
+
+void CustomOpenGLWidget::linkSelVerticesSequentially() {
+    linkSelectedVerticesSequentially();
+}
+
+void CustomOpenGLWidget::removeSelectedVertices() {
+    for (auto pair : selectedVertices){
+        graph->removeVertex(pair.second);
+    }
+    selectedVertices.clear();
+    selectedVerticesOrder.clear();
+    prepareEdgesToDraw();
+    prepareVertexToDraw();
+    update();
+    emit amountsChanged(graph->vertices.size(),
+                        graph->edges.size(),
+                        selectedVertices.size(),
+                        selectedEdges.size());
+}
+
+void CustomOpenGLWidget::removeSelectedEdges() {
+    for (auto pair : selectedEdges){
+        graph->removeEdge(pair.second);
+    }
+    selectedEdges.clear();
+    prepareEdgesToDraw();
+    prepareVertexToDraw();
+    update();
+    emit amountsChanged(graph->vertices.size(),
+                        graph->edges.size(),
+                        selectedVertices.size(),
+                        selectedEdges.size());
+}
+
+void CustomOpenGLWidget::removeSelVertices() {
+    removeSelectedVertices();
+}
+
+void CustomOpenGLWidget::removeSelEdges() {
+    removeSelectedEdges();
+}
+
+void CustomOpenGLWidget::removeSelEdgesAndVertices() {
+    removeSelectedEdges();
+    removeSelectedVertices();
+}
+
+void CustomOpenGLWidget::dropSelVertices(){
+    clearSelectedVertices();
+}
+
+void CustomOpenGLWidget::dropSelEdges() {
+    clearSelectedEdges();
+}
+
+void CustomOpenGLWidget::dropSelEdgesAndVertices() {
+    clearSelectedEdges();
+    clearSelectedVertices();
+}

@@ -28,9 +28,24 @@ public:
     void setGraph(Graph* g);
 
 public slots:
+    // Ui
     void changeVertexSize(int value);
     void changeClickMode(uint mode);
     void highlightSl(bool);
+
+    // Linking vertices
+    void linkSelVerticesTogether();
+    void linkSelVerticesSequentially();
+
+    // Removing vertices or\and edges
+    void removeSelVertices();
+    void removeSelEdges();
+    void removeSelEdgesAndVertices();
+
+    // Clearing vertices or\and edges
+    void dropSelVertices();
+    void dropSelEdges();
+    void dropSelEdgesAndVertices();
 
 signals:
     void save();
@@ -38,7 +53,7 @@ signals:
     void clickModeChangedByKey(uint);
     void highlightSig(bool);
 
-protected:
+private:
     //INTERFACE
     MapInfo* info;
     MultiToggleButton* mtb;
@@ -64,6 +79,7 @@ protected:
 
     //SELECTIONS
     std::map<long, Vertex*> selectedVertices;
+    std::list<Vertex*> selectedVerticesOrder;
     std::map<unsigned long, Edge*> selectedEdges;
 
     //SELECTIONS FOR OPENGL
@@ -72,7 +88,7 @@ protected:
     float* vertexTriangles = nullptr;
     float* vtColors = nullptr;
 
-
+    //METHODS
     QOpenGLShaderProgram* load_shaders(const std::string& v, const std::string& f, const std::string& g = "");
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -87,7 +103,7 @@ protected:
     //KEY EVENTS
     void keyPressEvent(QKeyEvent* e) override;
 
-private:
+
     void restoreDefaultView();
 
     void drawEdges(QOpenGLFunctions* f) const;
@@ -101,6 +117,12 @@ private:
 
     bool selectVertex(Vertex* v);
     bool selectEdge(Edge *e);
+
+    void linkAllSelectedVerticesTogether();
+    void linkSelectedVerticesSequentially();
+
+    void removeSelectedVertices();
+    void removeSelectedEdges();
 
     QVector2D convertPointFromMapToCanvas(const QVector2D &v);
     QVector2D convertPointFromCanvasToMap(const QVector2D &v);
