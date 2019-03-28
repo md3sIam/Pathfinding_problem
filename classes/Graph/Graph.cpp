@@ -6,7 +6,7 @@
 #include "../Vertex/Vertex.h"
 #include "../Edge/Edge.h"
 
-Graph::Graph(): isNormalized(false), maxX(-181), maxY(-181), minX(181), minY(181) {}
+Graph::Graph(): isNormalized(false), maxX(100), maxY(100), minX(0), minY(0) {}
 
 Graph::Graph(const Graph &g) {
     vertices = g.vertices;
@@ -81,17 +81,24 @@ void Graph::read_vertices(const std::string &filename) {
 }
 
 void Graph::checkForMaxMin(Vertex &v){
-    if (maxX < v.lon){
+    if (maxX < v.lon || !isSetMaxX){
         maxX = v.lon;
+        if (!isSetMaxX) isSetMaxX = true;
     }
-    if (maxY < v.lat){
+    if (maxY < v.lat || !isSetMaxY){
         maxY = v.lat;
+        if (!isSetMaxY) isSetMaxY = true;
+
     }
-    if (minX > v.lon){
+    if (minX > v.lon || !isSetMinX){
         minX = v.lon;
+        if (!isSetMinX) isSetMinX = true;
+
     }
-    if (minY > v.lat){
+    if (minY > v.lat || !isSetMinY){
         minY = v.lat;
+        if (!isSetMinY) isSetMinY = true;
+
     }
 }
 
@@ -259,9 +266,9 @@ void Graph::removeEdge(Edge *e) {
         }
     }
     //Removing edge
-    std::cout << edges.size() << std::endl;
+    //std::cout << edges.size() << std::endl;
     edges.erase(e->id);
-    std::cout << edges.size() << std::endl;
+    //std::cout << edges.size() << std::endl;
     delete e;
 }
 
@@ -281,8 +288,6 @@ void Graph::read_binary(const std::string &filename) {
         id = *(long*)memblock;
         lat = *(double*)(memblock + sizeof(long));
         lon = *(double*)(memblock + sizeof(long) + sizeof(double));
-        /*std::cout << id << std::endl << lat << std::endl << lon
-                    << std::endl << std::endl;*/
         if (!(id == 0 && lon == 0 && lat == 0)){
             auto vertex = new Vertex(id, lon, lat);
             vertices.insert({id, vertex});

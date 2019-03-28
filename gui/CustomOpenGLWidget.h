@@ -54,11 +54,15 @@ public slots:
     void changeEdgeColor(const QColor& color);
     void changeSelectedEdgeColor(const QColor& color);
 
+private slots:
+    void checkForEnablingSearchButton(unsigned long, unsigned long, unsigned long,unsigned long);
+
 signals:
     void save();
     void amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long);
     void clickModeChangedByKey(uint);
     void highlightSig(bool);
+    void enableToSearchPath(bool);
 
 private:
     //INTERFACE

@@ -29,6 +29,8 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
 
     // Setting up inner signals and slot
     connect(this, SIGNAL(highlightSig(bool)), this, SLOT(highlightSl(bool)));
+    connect(this, SIGNAL(amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long)),
+            this, SLOT(checkForEnablingSearchButton(unsigned long, unsigned long, unsigned long,unsigned long)));
 
     // Setting MultiToggleButton
     QVector<QString> names = {"Select vertices",
@@ -94,8 +96,6 @@ void CustomOpenGLWidget::setGraph(Graph *g) {
     selectedVerticesOrder.clear();
     selectedEdges.clear();
     graph = g;
-    std::cout << graph->vertices.size() << '\n';
-    std::cout << graph->edges.size() << '\n';
     prepareEdgesToDraw();
     prepareVertexToDraw();
     update();
@@ -486,12 +486,6 @@ QVector2D CustomOpenGLWidget::convertFromMapToCoords(const QVector2D &v) {
 float CustomOpenGLWidget::convertDistFromPixToCoords(int d) {
     float x = float(d) / width() * (graph->maxX - graph->minX) / zoom;
     float y = float(d) / height() * (graph->maxY - graph->minY) / zoom;
-    std::cout << d << std::endl;
-    std::cout << width() << std::endl;
-    std::cout << height() << std::endl;
-    std::cout << (graph->maxX - graph->minX) << std::endl;
-    std::cout << (graph->maxY - graph->minY) << std::endl;
-    std::cout << x << '\n' << y << std::endl;
     return x > y ? x : y;
 }
 
@@ -622,7 +616,7 @@ void CustomOpenGLWidget::clearSelectedEdges() {
 }
 
 bool CustomOpenGLWidget::selectVertex(Vertex *v) {
-    std::cout << v->get_info() << std::endl;
+    std::cout << v->get_info() << std::endl << std::endl;
     auto it = selectedVertices.find(v->id);
     if (it == selectedVertices.end()){
         selectedVertices.insert({v->id, v});
@@ -635,7 +629,7 @@ bool CustomOpenGLWidget::selectVertex(Vertex *v) {
 }
 
 bool CustomOpenGLWidget::selectEdge(Edge *e){
-    std::cout << e->get_info() << std::endl;
+    std::cout << e->get_info() << std::endl << std::endl;
     auto it = selectedEdges.find(e->id);
     if (it == selectedEdges.end()){
         selectedEdges.insert({e->id, e});
@@ -774,4 +768,11 @@ void CustomOpenGLWidget::changeSelectedEdgeColor(const QColor& color) {
     selectedEdgesColor = color;
     prepareEdgesToDraw();
     update();
+}
+
+void CustomOpenGLWidget::checkForEnablingSearchButton(unsigned long, unsigned long, unsigned long selected_amount, unsigned long) {
+    if (selected_amount == 2)
+        emit enableToSearchPath(true);
+    else
+        emit enableToSearchPath(false);
 }

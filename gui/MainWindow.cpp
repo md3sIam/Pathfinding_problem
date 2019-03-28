@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     graph->read_binary(current_filename);
     std::cout << "Graph is read\n";
     ui->mapWidget->setGraph(graph);
+    connect(ui->mapWidget, SIGNAL(enableToSearchPath(bool)), ui->search_button, SLOT(setEnabled(bool)));
 
     //Setting up actions for toolbar
     connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));

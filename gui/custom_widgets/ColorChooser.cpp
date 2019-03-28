@@ -38,7 +38,6 @@ void ColorChooser::setColor(const QColor &color) {
     str += QString(std::to_string(color.red()).c_str()) + QString(",")
             + QString(std::to_string(color.green()).c_str()) + QString(",")
             + QString(std::to_string(color.blue()).c_str()) + QString(");") ;
-    std::cout << str.toStdString();
     current_color = color;
     demo_frame->setStyleSheet(str);
     emit colorChanged(current_color);

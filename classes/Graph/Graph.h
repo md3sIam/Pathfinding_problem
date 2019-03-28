@@ -16,6 +16,7 @@ private:
     std::map<long, Vertex*> vertices;
     std::map<unsigned long, Edge*> edges;
     double maxX, maxY, minX, minY;
+    bool isSetMaxX, isSetMaxY, isSetMinX, isSetMinY;
 
     bool isNormalized;
     //END OF PROPERTIES
