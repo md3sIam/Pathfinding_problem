@@ -130,6 +130,30 @@ private:
     void prepareEdgesToDraw();
     void prepareVertexToDraw();
 
+    // TESTING
+    QOpenGLShaderProgram* pr;
+    float* preparedCoreEdges;
+    float* preparedSelectedEdges;
+    void prepareCoreEdgesToDraw();
+    void prepareSelectedEdgesToDraw();
+    void prepareAllEdgesToDraw();
+    void drawEdges(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
+    void drawCoreEdges();
+    void drawSelectedEdges();
+    void drawAllEdges();
+
+    QOpenGLShaderProgram* pr1;
+    float* preparedCoreVertices;
+    float* preparedSelectedVertices;
+    void prepareCoreVerticesToDraw();
+    void prepareSelectedVerticesToDraw();
+    void prepareAllVerticesToDraw();
+    void drawVertices(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
+    void drawCoreVertices();
+    void drawSelectedVertices();
+    void drawAllVertices();
+    // END OF TESTING
+
     void clearSelectedVertices();
     void clearSelectedEdges();
 
