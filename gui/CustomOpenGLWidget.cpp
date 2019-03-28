@@ -2,7 +2,6 @@
 #include "../classes/Edge/Edge.h"
 #include "../classes/Vertex/Vertex.h"
 
-#include <QWidget>
 #include <QOpenGLFunctions>
 #include "CustomOpenGLWidget.h"
 #include <cmath>
@@ -21,6 +20,12 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
 {
     // Setting up parameters of widget
     setFocusPolicy(Qt::StrongFocus);
+
+    vertexColor = QColor(255, 255, 255);
+    selectedVertexColor = QColor(0, 78, 255);
+
+    edgeColor = QColor(255, 255, 255);
+    selectedEdgesColor = QColor(0, 128, 255);
 
     // Setting up inner signals and slot
     connect(this, SIGNAL(highlightSig(bool)), this, SLOT(highlightSl(bool)));
@@ -170,8 +175,6 @@ void CustomOpenGLWidget::drawEdges(QOpenGLFunctions* f) const {
     graphShaderProgram->enableAttributeArray(colorLocation);
     graphShaderProgram->setAttributeArray(colorLocation, GL_FLOAT, edgesColors, 3, 3 * sizeof(float));
     f->glDrawArrays(GL_LINES, 0, 2 * (GLsizei)graph->edges.size());
-    //graphShaderProgram->disableAttributeArray(posLocation);
-    //graphShaderProgram->disableAttributeArray(colorLocation);
 }
 
 void CustomOpenGLWidget::highlightVertices(QOpenGLFunctions *f) const {
@@ -378,8 +381,6 @@ void CustomOpenGLWidget::wheelEvent(QWheelEvent *e) {
         zoom = (float)pow(2, zoomAngle / 360);
         update();
     }
-    /*std::cout << "Current zoom: " << zoom << std::endl;
-    std::cout << "Current angle: " << zoomAngle << std::endl;*/
 }
 
 void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
@@ -514,22 +515,31 @@ void CustomOpenGLWidget::prepareEdgesToDraw(){
     edgesColors = new float[6 * graph->edges.size()];
     int i = 0;
     int j = 0;
+
+    float r = (float)edgeColor.red() / 255.0f;
+    float g = (float)edgeColor.green() / 255.0f;
+    float b = (float)edgeColor.blue() / 255.0f;
+
     for (auto pair : graph->edges){
         if (selectedEdges.find(pair.second->id) == selectedEdges.end()) {
             preparedEdges[i] = (float) pair.second->vFrom->lon;
             preparedEdges[i + 1] = (float) pair.second->vFrom->lat;
             preparedEdges[i + 2] = (float) pair.second->vTo->lon;
             preparedEdges[i + 3] = (float) pair.second->vTo->lat;
-            edgesColors[j] = .99f;
-            edgesColors[j + 1] = .99f;
-            edgesColors[j + 2] = .99f;
-            edgesColors[j + 3] = .99f;
-            edgesColors[j + 4] = .99f;
-            edgesColors[j + 5] = .99f;
+            edgesColors[j] = r;
+            edgesColors[j + 1] = g;
+            edgesColors[j + 2] = b;
+            edgesColors[j + 3] = r;
+            edgesColors[j + 4] = g;
+            edgesColors[j + 5] = b;
             i += 4;
             j += 6;
         }
     }
+
+    float sr = (float)selectedEdgesColor.red() / 255.0f;
+    float sg = (float)selectedEdgesColor.green() / 255.0f;
+    float sb = (float)selectedEdgesColor.blue() / 255.0f;
 
     //Setting coordinates and colors of selected
     for (auto pair : selectedEdges){
@@ -537,12 +547,12 @@ void CustomOpenGLWidget::prepareEdgesToDraw(){
         preparedEdges[i + 1] = (float) pair.second->vFrom->lat;
         preparedEdges[i + 2] = (float) pair.second->vTo->lon;
         preparedEdges[i + 3] = (float) pair.second->vTo->lat;
-        edgesColors[j] = .0f;
-        edgesColors[j + 1] = .5f;
-        edgesColors[j + 2] = .99f;
-        edgesColors[j + 3] = .0f;
-        edgesColors[j + 4] = .5f;
-        edgesColors[j + 5] = .99f;
+        edgesColors[j] = sr;
+        edgesColors[j + 1] = sg;
+        edgesColors[j + 2] = sb;
+        edgesColors[j + 3] = sr;
+        edgesColors[j + 4] = sg;
+        edgesColors[j + 5] = sb;
         i += 4;
         j += 6;
     }
@@ -557,27 +567,35 @@ void CustomOpenGLWidget::prepareVertexToDraw() {
     vtColors = new float[graph->vertices.size() * 3];
     int i = 0;
     int j = 0;
+
+    float r = (float)vertexColor.red() / 255.0f;
+    float g = (float)vertexColor.green() / 255.0f;
+    float b = (float)vertexColor.blue() / 255.0f;
+
     for (auto v : graph->vertices){
         if (selectedVertices.find(v.second->id) == selectedVertices.end()) {
             vertexTriangles[i] = (float) v.second->lon;
             vertexTriangles[i + 1] = (float) v.second->lat;
             i += 2;
 
-            vtColors[j] = .99f;
-            vtColors[j + 1] = .99f;
-            vtColors[j + 2] = .99f;
+            vtColors[j] = r;
+            vtColors[j + 1] = g;
+            vtColors[j + 2] = b;
             j += 3;
         }
     }
     //Setting coordinates and colors of selected
+    float sr = (float)selectedVertexColor.red() / 255.0f;
+    float sg = (float)selectedVertexColor.green() / 255.0f;
+    float sb = (float)selectedVertexColor.blue() / 255.0f;
     for (auto v : selectedVertices){
         vertexTriangles[i] = (float) v.second->lon;
         vertexTriangles[i + 1] = (float) v.second->lat;
         i += 2;
 
-        vtColors[j] = .0f;
-        vtColors[j + 1] = .3f;
-        vtColors[j + 2] = .99f;
+        vtColors[j] = sr;
+        vtColors[j + 1] = sg;
+        vtColors[j + 2] = sb;
         j += 3;
     }
 }
@@ -732,4 +750,28 @@ void CustomOpenGLWidget::dropSelEdges() {
 void CustomOpenGLWidget::dropSelEdgesAndVertices() {
     clearSelectedEdges();
     clearSelectedVertices();
+}
+
+void CustomOpenGLWidget::changeVertexColor(const QColor& color) {
+    vertexColor = color;
+    prepareVertexToDraw();
+    update();
+}
+
+void CustomOpenGLWidget::changeSelectedVertexColor(const QColor& color) {
+    selectedVertexColor = color;
+    prepareVertexToDraw();
+    update();
+}
+
+void CustomOpenGLWidget::changeEdgeColor(const QColor& color) {
+    edgeColor = color;
+    prepareEdgesToDraw();
+    update();
+}
+
+void CustomOpenGLWidget::changeSelectedEdgeColor(const QColor& color) {
+    selectedEdgesColor = color;
+    prepareEdgesToDraw();
+    update();
 }

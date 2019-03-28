@@ -31,6 +31,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     //Setting up the EDITOR tab
     ui->hl_v_radio->setChecked(false);
+
+    ui->ch_v_color_chooser->setStr("Change color...");
+    ui->ch_v_color_chooser->setColor(QColor(255,255,255));
+    ui->ch_sel_v_color_chooser->setStr("Change selected color...");
+    ui->ch_sel_v_color_chooser->setColor(QColor(0, 78, 255));
+
+    ui->ch_e_color_chooser->setStr("Change color...");
+    ui->ch_e_color_chooser->setColor(QColor(255,255,255));
+    ui->ch_sel_e_color_chooser->setStr("Change selected color...");
+    ui->ch_sel_e_color_chooser->setColor(QColor(0, 128, 255));
+
     connect(ui->hl_v_radio, SIGNAL(toggled(bool)), ui->mapWidget, SLOT(highlightSl(bool)));
     connect(ui->mapWidget, SIGNAL(highlightSig(bool)), ui->hl_v_radio, SLOT(toggle()));
 
@@ -39,9 +50,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(ui->link_seq_button, SIGNAL(pressed()), ui->mapWidget, SLOT(linkSelVerticesSequentially()));
     connect(ui->rm_sel_v_button, SIGNAL(pressed()), ui->mapWidget, SLOT(removeSelVertices()));
     connect(ui->drop_sel_v_button, SIGNAL(pressed()), ui->mapWidget, SLOT(dropSelVertices()));
+    connect(ui->ch_v_color_chooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(changeVertexColor(QColor)));
+    connect(ui->ch_sel_v_color_chooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(changeSelectedVertexColor(QColor)));
+
 
     connect(ui->rm_sel_e_button, SIGNAL(pressed()), ui->mapWidget, SLOT(removeSelEdges()));
     connect(ui->drop_sel_e_button, SIGNAL(pressed()), ui->mapWidget, SLOT(dropSelEdges()));
+    connect(ui->ch_e_color_chooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(changeEdgeColor(QColor)));
+    connect(ui->ch_sel_e_color_chooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(changeSelectedEdgeColor(QColor)));
 
     connect(ui->rm_sel_button, SIGNAL(pressed()), ui->mapWidget, SLOT(removeSelEdgesAndVertices()));
     connect(ui->drop_sel_button, SIGNAL(pressed()), ui->mapWidget, SLOT(dropSelEdgesAndVertices()));

@@ -36,8 +36,6 @@ private slots:
     void fileSave();
     void fileSave_as();
     void printFileName(const QString& str);
-
-
 };
 
 

@@ -15,7 +15,7 @@ set(GRAPH_CPP classes/Graph/Graph.cpp)
 
 # Utils
 set(CSVUTIL_CPP classes/Utilities/CSVUtil/CSVUtil.cpp)
-set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp gui/custom_widgets/MultiToggleButton.cpp gui/custom_widgets/MultiToggleButton.h gui/custom_widgets/MapInfo.cpp gui/custom_widgets/MapInfo.h)
+set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp gui/custom_widgets/MultiToggleButton.cpp gui/custom_widgets/MultiToggleButton.h gui/custom_widgets/MapInfo.cpp gui/custom_widgets/MapInfo.h gui/custom_widgets/ColorSelectButton.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${VERTEX_CPP}
@@ -24,7 +24,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${CSVUTIL_CPP}
         ${SHADERLOADER_CPP} gui/MainWindow.cpp gui/CustomOpenGLWidget.cpp
         gui/VertexButton.cpp
-        gui/custom_widgets/MultiToggleButton.cpp gui/custom_widgets/MultiToggleButton.h)
+        gui/custom_widgets/MultiToggleButton.cpp gui/custom_widgets/MultiToggleButton.h gui/custom_widgets/ColorSelectButton.h gui/custom_widgets/ColorChooser.cpp gui/custom_widgets/ColorChooser.h)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)

@@ -13,6 +13,7 @@
 #include <QOpenGLShader>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLContext>
+#include <QColorDialog>
 #include <gui/VertexButton.h>
 #include "../classes/Graph/Graph.h"
 #include "custom_widgets/MultiToggleButton.h"
@@ -47,6 +48,12 @@ public slots:
     void dropSelEdges();
     void dropSelEdgesAndVertices();
 
+    // Changing colors
+    void changeVertexColor(const QColor& color);
+    void changeSelectedVertexColor(const QColor& color);
+    void changeEdgeColor(const QColor& color);
+    void changeSelectedEdgeColor(const QColor& color);
+
 signals:
     void save();
     void amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long);
@@ -76,6 +83,13 @@ private:
     bool vertexHighlight = false;
     int arrowShiftSpeed = 20;
     int pixelRadiusClickAreaSearch = 100;
+
+    // Colors
+    QColor vertexColor;
+    QColor selectedVertexColor;
+
+    QColor edgeColor;
+    QColor selectedEdgesColor;
 
     //SELECTIONS
     std::map<long, Vertex*> selectedVertices;
