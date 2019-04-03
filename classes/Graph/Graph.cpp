@@ -41,10 +41,10 @@ Graph::~Graph() {
     }
     std::map<unsigned long, Edge*>().swap(edges);
 
-    for (std::pair<long, Vertex*> v : vertices){
+    for (std::pair<unsigned long, Vertex*> v : vertices){
         delete v.second;
     }
-    std::map<long, Vertex*>().swap(vertices);
+    std::map<unsigned long, Vertex*>().swap(vertices);
 }
 
 int Graph::read_graph_from_files(std::string vFilename, std::string eFilename) {

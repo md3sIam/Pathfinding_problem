@@ -13,7 +13,7 @@ class Graph {
 
 private:
     //PROPERTIES
-    std::map<long, Vertex*> vertices;
+    std::map<unsigned long, Vertex*> vertices;
     std::map<unsigned long, Edge*> edges;
     double maxX, maxY, minX, minY;
     bool isSetMaxX, isSetMaxY, isSetMinX, isSetMinY;

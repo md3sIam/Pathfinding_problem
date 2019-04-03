@@ -27,6 +27,9 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
     edgeColor = QColor(255, 255, 255);
     selectedEdgesColor = QColor(0, 128, 255);
 
+    initVertexHandler();
+    initEdgeHandler();
+
     // Setting up inner signals and slot
     connect(this, SIGNAL(highlightSig(bool)), this, SLOT(highlightSl(bool)));
     connect(this, SIGNAL(amountsChanged(unsigned long, unsigned long, unsigned long,unsigned long)),
@@ -79,11 +82,9 @@ void CustomOpenGLWidget::highlightSl(bool h) {
 CustomOpenGLWidget::~CustomOpenGLWidget()
 {
     delete graph;
-    delete [] preparedEdges;
-    delete [] vertexTriangles;
-    delete [] vtColors;
-    delete graphShaderProgram;
-    delete vertexShaderProgram;
+
+    delete edge_default_shader_program;
+    delete vertex_default_shader_program;
     delete info;
     delete mtb;
     delete vertexSizeSlider;
@@ -91,47 +92,52 @@ CustomOpenGLWidget::~CustomOpenGLWidget()
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
     restoreDefaultView();
-    if (graph != nullptr) delete graph;
-    selectedVertices.clear();
-    selectedVerticesOrder.clear();
-    selectedEdges.clear();
+    delete graph;
+    vertexHandler["Selected"].clear();
+    edgeHandler["Selected"].clear();
     graph = g;
-    prepareAllEdgesToDraw();
-    prepareAllVerticesToDraw();
+    for (std::pair<const unsigned long, Vertex*>& pair : graph->vertices)
+        vertexHandler.addToType("Core", pair.second);
+    for (std::pair<const unsigned long, Edge*>& pair : graph->edges)
+        edgeHandler.addToType("Core", pair.second);
+//    prepareAllEdgesToDraw();
+    //prepareAllVerticesToDraw();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                        edgeHandler["Selected"].getSize());
+}
+
+void CustomOpenGLWidget::initVertexHandler() {
+    vertexHandler.createType("Core", vertexColor);
+    vertexHandler.createType("Selected", selectedVertexColor);
+}
+
+void CustomOpenGLWidget::initEdgeHandler() {
+    edgeHandler.createType("Core", edgeColor);
+    edgeHandler.createType("Selected", selectedEdgesColor);
 }
 
 void CustomOpenGLWidget::initializeGL()
 {
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                        edgeHandler["Selected"].getSize());
     mtb->setGeometry(width() - 400, height() - 40, 400, 40);
-//    mtb->show();
-//    info->show();
     vertexSizeSlider->setGeometry(width() - 20, 5, 0, 0);
-    graphShaderProgram = load_shaders(
-            "../shaders/edge_vertex_shader.glsl",
-            "../shaders/edge_fragment_shader.glsl");
-    pr = load_shaders(
+    edge_default_shader_program = load_shaders(
             "../shaders/v2/edges_vertex_const_color_shader.glsl",
             "../shaders/v2/edges_fragment_const_color_shader.glsl"
             );
-    pr1 = load_shaders(
+    vertex_default_shader_program = load_shaders(
             "../shaders/v2/vertices_vertex_const_color_shader.glsl",
             "../shaders/v2/vertices_fragment_const_color_shader.glsl",
             "../shaders/v2/vertices_geom_const_color_shader.glsl");
-    vertexShaderProgram = load_shaders(
-            "../shaders/vertex_vertex_shader.glsl",
-            "../shaders/vertex_fragment_shader.glsl",
-            "../shaders/vertex_geom_shader.glsl");
-    prepareAllEdgesToDraw();
-    prepareAllVerticesToDraw();
+//    prepareAllEdgesToDraw();
+    //prepareAllVerticesToDraw();
+
     makeCurrent();
     initialWidth = width();
     initialHeight = height();
@@ -139,8 +145,6 @@ void CustomOpenGLWidget::initializeGL()
 
 void CustomOpenGLWidget::paintGL()
 {
-    static int count = 0;
-    //std::cout << "Repainting x" << count++ << "!\n";
     auto f = QOpenGLContext::currentContext()->functions();
     f->glClear(GL_COLOR_BUFFER_BIT);
 
@@ -157,17 +161,23 @@ void CustomOpenGLWidget::resizeGL(int w, int h) {
     vertexSizeSlider->setGeometry(w - 20, 5, 0, 0);
 }
 
-void CustomOpenGLWidget::drawCoreEdges() {
-    drawEdges(pr, edgeColor, preparedCoreEdges, 2 * (graph->edges.size() - selectedEdges.size()));
+/*void CustomOpenGLWidget::drawCoreEdges() {
+    drawEdges(edge_default_shader_program,
+            edgeColor,
+            preparedCoreEdges,
+            2 * (graph->edges.size() - selectedEdges.size()));
 }
 
 void CustomOpenGLWidget::drawSelectedEdges() {
-    drawEdges(pr, selectedEdgesColor, preparedSelectedEdges, 2 * selectedEdges.size());
-}
+    drawEdges(edge_default_shader_program,
+            selectedEdgesColor,
+            preparedSelectedEdges,
+            2 * selectedEdges.size());
+}*/
 
 void CustomOpenGLWidget::drawAllEdges() {
-    drawCoreEdges();
-    drawSelectedEdges();
+    edgeHandler.drawType("Core", this);
+    edgeHandler.drawType("Selected", this);
 }
 
 void CustomOpenGLWidget::drawEdges(QOpenGLShaderProgram* program,
@@ -202,17 +212,25 @@ void CustomOpenGLWidget::drawEdges(QOpenGLShaderProgram* program,
     f->glDrawArrays(GL_LINES, 0, size);
 }
 
-void CustomOpenGLWidget::drawCoreVertices() {
-    drawVertices(pr1, vertexColor, preparedCoreVertices, 2 * (graph->vertices.size() - selectedVertices.size()));
+/*void CustomOpenGLWidget::drawCoreVertices() {
+    drawVertices(vertex_default_shader_program,
+            vertexColor,
+            preparedCoreVertices,
+            2 * (graph->vertices.size() - selectedVertices.size()));
 }
 
 void CustomOpenGLWidget::drawSelectedVertices() {
-    drawVertices(pr1, selectedVertexColor, preparedSelectedVertices, 2 * selectedVertices.size());
-}
+    drawVertices(vertex_default_shader_program,
+            selectedVertexColor,
+            preparedSelectedVertices,
+            2 * selectedVertices.size());
+}*/
 
 void CustomOpenGLWidget::drawAllVertices() {
-    drawCoreVertices();
-    drawSelectedVertices();
+    /*drawCoreVertices();
+    drawSelectedVertices();*/
+    vertexHandler.drawType("Core", this);
+    vertexHandler.drawType("Selected", this);
 }
 
 void CustomOpenGLWidget::drawVertices(QOpenGLShaderProgram* program,
@@ -246,42 +264,10 @@ void CustomOpenGLWidget::drawVertices(QOpenGLShaderProgram* program,
 
     program->enableAttributeArray(posLocation);
 
-    vertexShaderProgram->setUniformValue("f", false);
-    vertexShaderProgram->enableAttributeArray(posLocation);
-    vertexShaderProgram->setAttributeArray(posLocation, vertices, 2, 2 * sizeof(float));
+    program->setUniformValue("f", false);
+    program->enableAttributeArray(posLocation);
+    program->setAttributeArray(posLocation, GL_FLOAT, vertices, 2, 2 * sizeof(float));
     f->glDrawArrays(GL_POINTS, 0, size);
-}
-
-void CustomOpenGLWidget::highlightVertices(QOpenGLFunctions *f) const {
-    if (!vertexShaderProgram->bind()) {
-        throw std::runtime_error("Vertex shader isn't bound");
-    }
-
-    int minxyID = vertexShaderProgram->uniformLocation("minxy");
-    int maxxyID = vertexShaderProgram->uniformLocation("maxxy");
-    int zoomLocation = vertexShaderProgram->uniformLocation("zoom");
-    int posLocation = vertexShaderProgram->attributeLocation("pos");
-    int shiftLocation = vertexShaderProgram->uniformLocation("shiftInPix");
-    int screenRatioLocation = vertexShaderProgram->uniformLocation("screenRatio");
-    int colorLocation = vertexShaderProgram->attributeLocation("color");
-
-
-    vertexShaderProgram->setUniformValue(minxyID, (float) graph->minX, (float) graph->minY);
-    vertexShaderProgram->setUniformValue(maxxyID, (float) graph->maxX, (float) graph->maxY);
-    vertexShaderProgram->setUniformValue(zoomLocation, zoom);
-    vertexShaderProgram->setUniformValue(shiftLocation, shiftX, shiftY);
-    vertexShaderProgram->setUniformValue(screenRatioLocation, this->width(), this->height()/*initialWidth, initialHeight*/);
-    vertexShaderProgram->setUniformValue("baseRatio", initialWidth, initialHeight);
-    vertexShaderProgram->setUniformValue("radius", vertexRadius);
-
-    vertexShaderProgram->enableAttributeArray(posLocation);
-
-    vertexShaderProgram->setUniformValue("f", false);
-    vertexShaderProgram->enableAttributeArray(posLocation);
-    vertexShaderProgram->setAttributeArray(posLocation, vertexTriangles, 2, 2 * sizeof(float));
-    vertexShaderProgram->enableAttributeArray(colorLocation);
-    vertexShaderProgram->setAttributeArray(colorLocation, vtColors, 3, 3 * sizeof(float));
-    f->glDrawArrays(GL_POINTS, 0, graph->vertices.size());
 }
 
 QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(const std::string& vs_path,
@@ -394,12 +380,12 @@ void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
         Vertex *found = graph->getTheClosestVertex(coord.x(), coord.y(), radius);
         if (found != nullptr) {
             selectVertex(found);
-            prepareAllVerticesToDraw();
+            //prepareAllVerticesToDraw();
             update();
             emit amountsChanged(graph->vertices.size(),
                                 graph->edges.size(),
-                                selectedVertices.size(),
-                                selectedEdges.size());
+                                vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                                edgeHandler["Selected"].getSize());
 
         }
         return;
@@ -407,12 +393,15 @@ void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
 
     if (clickMode == 2){
         QVector2D coord = convertCurrentPointFromMapToCoords({(float) e->x(), (float) e->y()});
-        graph->addVertex(new Vertex(-1, coord.x(), coord.y()));
+        auto v = new Vertex(-1, coord.x(), coord.y());
+        graph->addVertex(v);
+        vertexHandler.addToType("Core", v);
+        selectVertex(v);
         emit amountsChanged(graph->vertices.size(),
                             graph->edges.size(),
-                            selectedVertices.size(),
-                            selectedEdges.size());
-        prepareAllVerticesToDraw();
+                            vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                            edgeHandler["Selected"].getSize());
+        //prepareAllVerticesToDraw();
         update();
         return;
     }
@@ -422,12 +411,11 @@ void CustomOpenGLWidget::mouseReleaseEvent(QMouseEvent *e) {
         Edge* found = graph->getTheClosestEdge(coord.x(), coord.y(), 0.1);
         if (found != nullptr){
             selectEdge(found);
-            prepareAllEdgesToDraw();
             update();
             emit amountsChanged(graph->vertices.size(),
                                 graph->edges.size(),
-                                selectedVertices.size(),
-                                selectedEdges.size());
+                                vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                                edgeHandler["Selected"].getSize());
         }
         return;
     }
@@ -499,7 +487,7 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
 
     //connect vertices
     int count = 0;
-    if ((key == Qt::Key_C || key == /* c */1057) && selectedVertices.size() >= 2){
+    if ((key == Qt::Key_C || key == /* c */1057) && vertexHandler["Selected"].getSize() >= 2){
         linkAllSelectedVerticesTogether();
         return;
     }
@@ -573,178 +561,49 @@ QVector2D CustomOpenGLWidget::convertCurrentPointFromMapToCoords(const QVector2D
     return {x, y};
 }
 
-void CustomOpenGLWidget::prepareEdgesToDraw(){
-    if (preparedEdges != nullptr) delete [] preparedEdges;
-    if (edgesColors != nullptr) delete [] edgesColors;
-
-    //Setting coordinates and colors of not selected
-    preparedEdges = new float[10 * graph->edges.size()];
-    edgesColors = new float[6 * graph->edges.size()];
-    int i = 0;
-    int j = 0;
-
-    float r = (float)edgeColor.red() / 255.0f;
-    float g = (float)edgeColor.green() / 255.0f;
-    float b = (float)edgeColor.blue() / 255.0f;
-
-    for (auto pair : graph->edges){
-        if (selectedEdges.find(pair.second->id) == selectedEdges.end()) {
-            preparedEdges[i] = (float) pair.second->vFrom->lon;
-            preparedEdges[i + 1] = (float) pair.second->vFrom->lat;
-            preparedEdges[i + 2] = (float) pair.second->vTo->lon;
-            preparedEdges[i + 3] = (float) pair.second->vTo->lat;
-            edgesColors[j] = r;
-            edgesColors[j + 1] = g;
-            edgesColors[j + 2] = b;
-            edgesColors[j + 3] = r;
-            edgesColors[j + 4] = g;
-            edgesColors[j + 5] = b;
-            i += 4;
-            j += 6;
-        }
-    }
-
-    float sr = (float)selectedEdgesColor.red() / 255.0f;
-    float sg = (float)selectedEdgesColor.green() / 255.0f;
-    float sb = (float)selectedEdgesColor.blue() / 255.0f;
-
-    //Setting coordinates and colors of selected
-    for (auto pair : selectedEdges){
-        preparedEdges[i] = (float) pair.second->vFrom->lon;
-        preparedEdges[i + 1] = (float) pair.second->vFrom->lat;
-        preparedEdges[i + 2] = (float) pair.second->vTo->lon;
-        preparedEdges[i + 3] = (float) pair.second->vTo->lat;
-        edgesColors[j] = sr;
-        edgesColors[j + 1] = sg;
-        edgesColors[j + 2] = sb;
-        edgesColors[j + 3] = sr;
-        edgesColors[j + 4] = sg;
-        edgesColors[j + 5] = sb;
-        i += 4;
-        j += 6;
-    }
-}
-
-void CustomOpenGLWidget::prepareVertexToDraw() {
-    if (vertexTriangles != nullptr) delete [] vertexTriangles;
-    if (vtColors != nullptr) delete [] vtColors;
-
-    //Setting coordinates and colors of not selected
-    vertexTriangles = new float[graph->vertices.size() * 2];
-    vtColors = new float[graph->vertices.size() * 3];
-    int i = 0;
-    int j = 0;
-
-    float r = (float)vertexColor.red() / 255.0f;
-    float g = (float)vertexColor.green() / 255.0f;
-    float b = (float)vertexColor.blue() / 255.0f;
-
-    for (auto v : graph->vertices){
-        if (selectedVertices.find(v.second->id) == selectedVertices.end()) {
-            vertexTriangles[i] = (float) v.second->lon;
-            vertexTriangles[i + 1] = (float) v.second->lat;
-            i += 2;
-
-            vtColors[j] = r;
-            vtColors[j + 1] = g;
-            vtColors[j + 2] = b;
-            j += 3;
-        }
-    }
-    //Setting coordinates and colors of selected
-    float sr = (float)selectedVertexColor.red() / 255.0f;
-    float sg = (float)selectedVertexColor.green() / 255.0f;
-    float sb = (float)selectedVertexColor.blue() / 255.0f;
-    for (auto v : selectedVertices){
-        vertexTriangles[i] = (float) v.second->lon;
-        vertexTriangles[i + 1] = (float) v.second->lat;
-        i += 2;
-
-        vtColors[j] = sr;
-        vtColors[j + 1] = sg;
-        vtColors[j + 2] = sb;
-        j += 3;
-    }
-}
-
-void CustomOpenGLWidget::prepareCoreVerticesToDraw() {
-    if (preparedCoreVertices != nullptr) delete [] preparedCoreVertices;
-
-    //Setting coordinates and colors of not selected
-    preparedCoreVertices = new float[2 * (graph->vertices.size() - selectedVertices.size())];
-    int i = 0;
-
-    for (auto v : graph->vertices){
-        if (selectedVertices.find(v.second->id) == selectedVertices.end()) {
-            preparedCoreVertices[i] = (float) v.second->lon;
-            preparedCoreVertices[i + 1] = (float) v.second->lat;
-            i += 2;
-        }
-    }
-}
-
-void CustomOpenGLWidget::prepareSelectedVerticesToDraw() {
-    if (preparedSelectedVertices != nullptr) delete [] preparedSelectedVertices;
-
-    //Setting coordinates and colors of selected
-    preparedSelectedVertices = new float[2 * selectedVertices.size()];
-    int i = 0;
-
-    for (auto v : selectedVertices){
-        preparedSelectedVertices[i] = (float) v.second->lon;
-        preparedSelectedVertices[i + 1] = (float) v.second->lat;
-        i += 2;
-    }
-}
-
-void CustomOpenGLWidget::prepareAllVerticesToDraw() {
-    prepareCoreVerticesToDraw();
-    prepareSelectedVerticesToDraw();
-}
-
 void CustomOpenGLWidget::clearSelectedVertices() {
-    selectedVertices.clear();
-    selectedVerticesOrder.clear();
-    prepareAllVerticesToDraw();
+    vertexHandler["Selected"].clear();
+    //prepareAllVerticesToDraw();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                        edgeHandler["Selected"].getSize());
 }
 
 void CustomOpenGLWidget::clearSelectedEdges() {
-    selectedEdges.clear();
-    prepareAllEdgesToDraw();
+    edgeHandler["Selected"].clear();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                        edgeHandler["Selected"].getSize());
 }
 
 bool CustomOpenGLWidget::selectVertex(Vertex *v) {
-    std::cout << v->get_info() << std::endl << std::endl;
-    auto it = selectedVertices.find(v->id);
-    if (it == selectedVertices.end()){
-        selectedVertices.insert({v->id, v});
-        selectedVerticesOrder.push_back(v);
+    // its not necessary to change core
+    if (vertexHandler.typeContains("Selected", v)){
+        vertexHandler.removeFromType("Selected", v);
         return true;
     }
-    selectedVertices.erase(it);
-    selectedVerticesOrder.remove(v);
-    return false;
+    else {
+        vertexHandler.addToType("Selected", v);
+        return false;
+    }
 }
 
 bool CustomOpenGLWidget::selectEdge(Edge *e){
-    std::cout << e->get_info() << std::endl << std::endl;
-    auto it = selectedEdges.find(e->id);
-    if (it == selectedEdges.end()){
-        selectedEdges.insert({e->id, e});
+
+    if (edgeHandler.typeContains("Selected", e)){
+        edgeHandler.removeFromType("Selected", e);
+//        vertexHandler.addToType("Core", v);
         return true;
     }
-    selectedEdges.erase(it);
-    return false;
+    else {
+//        vertexHandler.removeFromType("Core", v);
+        edgeHandler.addToType("Selected", e);
+        return false;
+    }
 }
 
 void CustomOpenGLWidget::restoreDefaultView() {
@@ -760,20 +619,21 @@ void CustomOpenGLWidget::restoreDefaultView() {
 }
 
 void CustomOpenGLWidget::linkAllSelectedVerticesTogether() {
-    for (auto i = selectedVertices.begin(); i != selectedVertices.end(); i++){
-        for (auto j = i; j != selectedVertices.end(); j++){
-            if (j == i) continue;
-            graph->addEdge(new Edge(i->second,
-                                    j->second, -1));
+    const std::vector<Vertex*>& seq = vertexHandler["Selected"].getSequence();
+    for (Vertex* vi : seq){
+        for (Vertex* vj : seq){
+            if (vj == vi) continue;
+            Edge* e = new Edge(vi, vj, -1);
+            graph->addEdge(e);
+            edgeHandler["Core"].add(e);
+            edgeHandler["Selected"].add(e);
         }
     }
-    prepareAllEdgesToDraw();
-    prepareAllVerticesToDraw();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                        edgeHandler["Selected"].getSize());
 }
 
 void CustomOpenGLWidget::linkSelVerticesTogether() {
@@ -781,18 +641,21 @@ void CustomOpenGLWidget::linkSelVerticesTogether() {
 }
 
 void CustomOpenGLWidget::linkSelectedVerticesSequentially() {
-    for (auto i = selectedVerticesOrder.begin(); i != selectedVerticesOrder.end();){
+    const std::vector<Vertex*>& seq = vertexHandler["Selected"].getSequence();
+    for (auto i = seq.begin(); i != seq.end();){
         auto prev = i++;
-        if (i != selectedVerticesOrder.end())
-            graph->addEdge(new Edge(*prev, *i, -1));
+        if (i != seq.end()) {
+            Edge *e = new Edge(*prev, *i, -1);
+            graph->addEdge(e);
+            edgeHandler["Core"].add(e);
+            edgeHandler["Selected"].add(e);
+        }
     }
-    prepareAllEdgesToDraw();
-    prepareAllVerticesToDraw();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
+                        edgeHandler["Selected"].getSize());
 }
 
 void CustomOpenGLWidget::linkSelVerticesSequentially() {
@@ -800,31 +663,35 @@ void CustomOpenGLWidget::linkSelVerticesSequentially() {
 }
 
 void CustomOpenGLWidget::removeSelectedVertices() {
-    for (auto pair : selectedVertices){
-        graph->removeVertex(pair.second);
+    for (auto v : vertexHandler["Selected"].getSequence()) {
+        for (auto it : v->incidentEdges) {
+            //Removing edges from vectors of incident vertices for given vertex
+            edgeHandler.remove(it);
+        }
     }
-    selectedVertices.clear();
-    selectedVerticesOrder.clear();
-    prepareAllEdgesToDraw();
-    prepareAllVerticesToDraw();
+    for (Vertex* v : vertexHandler["Selected"].getSequence()){
+        vertexHandler.removeFromType("Core", v);
+        graph->removeVertex(v);
+    }
+    vertexHandler["Selected"].clear();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize(),
+                        edgeHandler["Selected"].getSize());
 }
 
 void CustomOpenGLWidget::removeSelectedEdges() {
-    for (auto pair : selectedEdges){
-        graph->removeEdge(pair.second);
+    for (Edge* e : edgeHandler["Selected"].getSequence()){
+        edgeHandler.removeFromType("Core", e);
+        graph->removeEdge(e);
     }
-    selectedEdges.clear();
-    prepareAllEdgesToDraw();
+    edgeHandler["Selected"].clear();
     update();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
-                        selectedVertices.size(),
-                        selectedEdges.size());
+                        vertexHandler["Selected"].getSize(),
+                        edgeHandler["Selected"].getSize());
 }
 
 void CustomOpenGLWidget::removeSelVertices() {
@@ -855,25 +722,25 @@ void CustomOpenGLWidget::dropSelEdgesAndVertices() {
 
 void CustomOpenGLWidget::changeVertexColor(const QColor& color) {
     vertexColor = color;
-    prepareCoreVerticesToDraw();
+    vertexHandler["Core"].setColor(vertexColor);
     update();
 }
 
 void CustomOpenGLWidget::changeSelectedVertexColor(const QColor& color) {
     selectedVertexColor = color;
-    prepareSelectedVerticesToDraw();
+    vertexHandler["Selected"].setColor(selectedVertexColor);
     update();
 }
 
 void CustomOpenGLWidget::changeEdgeColor(const QColor& color) {
     edgeColor = color;
-    prepareCoreEdgesToDraw();
+    edgeHandler["Core"].setColor(edgeColor);
     update();
 }
 
 void CustomOpenGLWidget::changeSelectedEdgeColor(const QColor& color) {
     selectedEdgesColor = color;
-    prepareSelectedEdgesToDraw();
+    edgeHandler["Selected"].setColor(selectedEdgesColor);
     update();
 }
 
@@ -884,7 +751,7 @@ void CustomOpenGLWidget::checkForEnablingSearchButton(unsigned long, unsigned lo
         emit enableToSearchPath(false);
 }
 
-void CustomOpenGLWidget::prepareCoreEdgesToDraw() {
+/*void CustomOpenGLWidget::prepareCoreEdgesToDraw() {
     if (preparedCoreEdges != nullptr) delete [] preparedCoreEdges;
 
     //Setting coordinates and colors of not selected
@@ -914,11 +781,11 @@ void CustomOpenGLWidget::prepareSelectedEdgesToDraw() {
         preparedSelectedEdges[i + 3] = (float) pair.second->vTo->lat;
         i += 4;
     }
-}
+}*/
 
-void CustomOpenGLWidget::prepareAllEdgesToDraw() {
+/*void CustomOpenGLWidget::prepareAllEdgesToDraw() {
     prepareCoreEdgesToDraw();
     prepareSelectedEdgesToDraw();
-}
+}*/
 
 

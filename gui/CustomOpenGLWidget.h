@@ -16,6 +16,7 @@
 #include <QColorDialog>
 #include <gui/VertexButton.h>
 #include "../classes/Graph/Graph.h"
+#include "classes/Category.h"
 #include "custom_widgets/MultiToggleButton.h"
 #include "custom_widgets/MapInfo.h"
 
@@ -73,8 +74,6 @@ private:
 
     //OPENGL INFO
     Graph* graph;
-    QOpenGLShaderProgram* graphShaderProgram;
-    QOpenGLShaderProgram* vertexShaderProgram;
     int initialWidth, initialHeight;
     float vertexRadius = 6;
     float zoom = 1,
@@ -88,6 +87,22 @@ private:
     int arrowShiftSpeed = 20;
     int pixelRadiusClickAreaSearch = 100;
 
+    // TESTING
+    QOpenGLShaderProgram* edge_default_shader_program;
+    void drawEdges(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
+    void drawAllEdges();
+
+    CategoriesContainer<Edge> edgeHandler;
+    void initEdgeHandler();
+
+    QOpenGLShaderProgram* vertex_default_shader_program;
+    void drawVertices(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
+    void drawAllVertices();
+
+    CategoriesContainer<Vertex> vertexHandler;
+    void initVertexHandler();
+    // END OF TESTING
+
     // Colors
     QColor vertexColor;
     QColor selectedVertexColor;
@@ -96,15 +111,10 @@ private:
     QColor selectedEdgesColor;
 
     //SELECTIONS
-    std::map<long, Vertex*> selectedVertices;
-    std::list<Vertex*> selectedVerticesOrder;
+    /*std::map<long, Vertex*> selectedVertices;
+    std::list<Vertex*> selectedVerticesOrder;*/
     std::map<unsigned long, Edge*> selectedEdges;
 
-    //SELECTIONS FOR OPENGL
-    float* preparedEdges = nullptr;
-    float* edgesColors = nullptr;
-    float* vertexTriangles = nullptr;
-    float* vtColors = nullptr;
 
     //METHODS
     QOpenGLShaderProgram* load_shaders(const std::string& v, const std::string& f, const std::string& g = "");
@@ -123,36 +133,6 @@ private:
 
 
     void restoreDefaultView();
-
-    void drawEdges(QOpenGLFunctions* f) const;
-    void highlightVertices(QOpenGLFunctions* f) const;
-
-    void prepareEdgesToDraw();
-    void prepareVertexToDraw();
-
-    // TESTING
-    QOpenGLShaderProgram* pr;
-    float* preparedCoreEdges;
-    float* preparedSelectedEdges;
-    void prepareCoreEdgesToDraw();
-    void prepareSelectedEdgesToDraw();
-    void prepareAllEdgesToDraw();
-    void drawEdges(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
-    void drawCoreEdges();
-    void drawSelectedEdges();
-    void drawAllEdges();
-
-    QOpenGLShaderProgram* pr1;
-    float* preparedCoreVertices;
-    float* preparedSelectedVertices;
-    void prepareCoreVerticesToDraw();
-    void prepareSelectedVerticesToDraw();
-    void prepareAllVerticesToDraw();
-    void drawVertices(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
-    void drawCoreVertices();
-    void drawSelectedVertices();
-    void drawAllVertices();
-    // END OF TESTING
 
     void clearSelectedVertices();
     void clearSelectedEdges();
@@ -174,6 +154,9 @@ private:
 
     QVector2D convertCurrentPointFromMapToCoords(const QVector2D& v);
     QVector2D convertCurrentPointFromCoordsToMap(const QVector2D& v);
+
+
+    template <class T> friend class CategoriesContainer;
 };
 
 

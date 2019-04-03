@@ -12,7 +12,7 @@ private:
     //Variables
     static long last_created_id;
 
-    long id;
+    unsigned long id;
     double lat, lon;
     std::vector<Edge*> incidentEdges;
 
@@ -33,4 +33,5 @@ public:
     friend class Edge;
     friend class Graph;
     friend class CustomOpenGLWidget;
+    template <class T> friend class Category;
 };

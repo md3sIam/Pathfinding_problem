@@ -33,7 +33,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         gui/custom_widgets/MultiToggleButton.h
         gui/custom_widgets/MapInfo.cpp
         gui/custom_widgets/MapInfo.h
-        gui/custom_widgets/ColorSelectButton.h)
+        gui/custom_widgets/ColorSelectButton.h classes/Category.cpp classes/Category.h)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)

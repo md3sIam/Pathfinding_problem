@@ -29,4 +29,5 @@ public:
 
     friend class Graph;
     friend class CustomOpenGLWidget;
+    template <class T> friend class Category;
 };
