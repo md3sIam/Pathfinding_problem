@@ -11,7 +11,7 @@ private:
     unsigned long id;
     Vertex *vFrom;
     Vertex *vTo;
-    long double weight;
+    double weight;
 
     //STATIC METHODS
     static std::tuple<unsigned long, long, long, long double> get_edge_info_from_csv_string(const std::string& str);
@@ -30,4 +30,5 @@ public:
     friend class Graph;
     friend class CustomOpenGLWidget;
     template <class T> friend class Category;
+    friend class Algorithms;
 };

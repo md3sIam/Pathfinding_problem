@@ -4,6 +4,7 @@
 
 #include <QOpenGLFunctions>
 #include "CustomOpenGLWidget.h"
+#include "DefaultGuiSettings.h"
 #include <cmath>
 #include <QWheelEvent>
 #include <sstream>
@@ -14,18 +15,28 @@
 #include <QPushButton>
 
 CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
-        : QOpenGLWidget(parent), zoom(1), shiftX(0), shiftY(0), graph(nullptr),
-          recentShiftX(0), recentShiftY(0),
-          zoomAngle(0)
+        : QOpenGLWidget(parent), zoom(dgs::zoom), shiftX(dgs::shiftX), shiftY(dgs::shiftY), graph(nullptr),
+          recentShiftX(dgs::recentShiftX), recentShiftY(dgs::recentShiftY),
+          zoomAngle(dgs::zoomAngle)
 {
+    vertexRadius = dgs::vertexRadius;
+    vertexHighlight = dgs::vertexHighlight;
+    arrowShiftSpeed = dgs::arrowShiftSpeed;
+    pixelRadiusClickAreaSearch = dgs::pixelRadiusClickAreaSearch;
     // Setting up parameters of widget
     setFocusPolicy(Qt::StrongFocus);
 
-    vertexColor = QColor(255, 255, 255);
-    selectedVertexColor = QColor(0, 78, 255);
+    vertexColor = dgs::vertexColor;
+    selectedVertexColor = dgs::selectedVertexColor;
 
-    edgeColor = QColor(255, 255, 255);
-    selectedEdgesColor = QColor(0, 128, 255);
+    edgeColor = dgs::edgeColor;
+    selectedEdgesColor = dgs::selectedEdgeColor;
+
+    pathColor = dgs::pathColor;
+    forwardSearchPathEdgesColor = dgs::forwardSearchPathEdgeColor;
+    reverseSearchPathEdgesColor = dgs::reverseSearchPathEdgeColor;
+    forwardSearchEdgesColor = dgs::forwardSearchAreaColor;
+    reverseSearchEdgesColor = dgs::reverseSearchAreaColor;
 
     initVertexHandler();
     initEdgeHandler();
@@ -92,13 +103,16 @@ CustomOpenGLWidget::~CustomOpenGLWidget()
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
     restoreDefaultView();
-    delete graph;
+    edgeHandler["Core"].clear();
+    vertexHandler["Core"].clear();
     vertexHandler["Selected"].clear();
     edgeHandler["Selected"].clear();
+    dropAlgResult();
+    delete graph;
     graph = g;
-    for (std::pair<const unsigned long, Vertex*>& pair : graph->vertices)
+    for (std::pair<const unsigned long, Vertex*>& pair : g->vertices)
         vertexHandler.addToType("Core", pair.second);
-    for (std::pair<const unsigned long, Edge*>& pair : graph->edges)
+    for (std::pair<const unsigned long, Edge*>& pair : g->edges)
         edgeHandler.addToType("Core", pair.second);
 //    prepareAllEdgesToDraw();
     //prepareAllVerticesToDraw();
@@ -112,11 +126,17 @@ void CustomOpenGLWidget::setGraph(Graph *g) {
 void CustomOpenGLWidget::initVertexHandler() {
     vertexHandler.createType("Core", vertexColor);
     vertexHandler.createType("Selected", selectedVertexColor);
+    vertexHandler.createType("Path", pathColor);
 }
 
 void CustomOpenGLWidget::initEdgeHandler() {
     edgeHandler.createType("Core", edgeColor);
     edgeHandler.createType("Selected", selectedEdgesColor);
+
+    edgeHandler.createType("FSPE", forwardSearchPathEdgesColor);
+    edgeHandler.createType("RSPE", reverseSearchPathEdgesColor);
+    edgeHandler.createType("FSE", forwardSearchEdgesColor);
+    edgeHandler.createType("RSE", reverseSearchEdgesColor);
 }
 
 void CustomOpenGLWidget::initializeGL()
@@ -149,7 +169,6 @@ void CustomOpenGLWidget::paintGL()
     f->glClear(GL_COLOR_BUFFER_BIT);
 
     drawAllEdges();
-
     if (vertexHighlight) {
         drawAllVertices();
     }
@@ -161,23 +180,10 @@ void CustomOpenGLWidget::resizeGL(int w, int h) {
     vertexSizeSlider->setGeometry(w - 20, 5, 0, 0);
 }
 
-/*void CustomOpenGLWidget::drawCoreEdges() {
-    drawEdges(edge_default_shader_program,
-            edgeColor,
-            preparedCoreEdges,
-            2 * (graph->edges.size() - selectedEdges.size()));
-}
-
-void CustomOpenGLWidget::drawSelectedEdges() {
-    drawEdges(edge_default_shader_program,
-            selectedEdgesColor,
-            preparedSelectedEdges,
-            2 * selectedEdges.size());
-}*/
-
 void CustomOpenGLWidget::drawAllEdges() {
     edgeHandler.drawType("Core", this);
     edgeHandler.drawType("Selected", this);
+    drawAlgResult();
 }
 
 void CustomOpenGLWidget::drawEdges(QOpenGLShaderProgram* program,
@@ -212,25 +218,10 @@ void CustomOpenGLWidget::drawEdges(QOpenGLShaderProgram* program,
     f->glDrawArrays(GL_LINES, 0, size);
 }
 
-/*void CustomOpenGLWidget::drawCoreVertices() {
-    drawVertices(vertex_default_shader_program,
-            vertexColor,
-            preparedCoreVertices,
-            2 * (graph->vertices.size() - selectedVertices.size()));
-}
-
-void CustomOpenGLWidget::drawSelectedVertices() {
-    drawVertices(vertex_default_shader_program,
-            selectedVertexColor,
-            preparedSelectedVertices,
-            2 * selectedVertices.size());
-}*/
-
 void CustomOpenGLWidget::drawAllVertices() {
-    /*drawCoreVertices();
-    drawSelectedVertices();*/
     vertexHandler.drawType("Core", this);
     vertexHandler.drawType("Selected", this);
+    if (hlPath) vertexHandler.drawType("Path", this);
 }
 
 void CustomOpenGLWidget::drawVertices(QOpenGLShaderProgram* program,
@@ -751,41 +742,109 @@ void CustomOpenGLWidget::checkForEnablingSearchButton(unsigned long, unsigned lo
         emit enableToSearchPath(false);
 }
 
-/*void CustomOpenGLWidget::prepareCoreEdgesToDraw() {
-    if (preparedCoreEdges != nullptr) delete [] preparedCoreEdges;
+void CustomOpenGLWidget::initAlgResult(const AlgResult * r) {
+    algResult = r;
+    for (Edge* edge : r->forwardSearchPathEdges)
+        edgeHandler.addToType("FSPE", edge);
 
-    //Setting coordinates and colors of not selected
-    preparedCoreEdges = new float[4 * (graph->edges.size() - selectedEdges.size())];
-    int i = 0;
+    for (Edge* edge : r->reverseSearchPathEdges)
+        edgeHandler.addToType("RSPE", edge);
 
-    for (auto pair : graph->edges){
-        if (selectedEdges.find(pair.second->id) == selectedEdges.end()) {
-            preparedCoreEdges[i] = (float) pair.second->vFrom->lon;
-            preparedCoreEdges[i + 1] = (float) pair.second->vFrom->lat;
-            preparedCoreEdges[i + 2] = (float) pair.second->vTo->lon;
-            preparedCoreEdges[i + 3] = (float) pair.second->vTo->lat;
-            i += 4;
-        }
-    }
+    for (Edge* edge : r->forwardSearchEdges)
+        edgeHandler.addToType("FSE", edge);
+
+    for (Edge* edge : r->reverseSearchEdges)
+        edgeHandler.addToType("RSE", edge);
+
+    for (Vertex* vertex : r->path)
+        vertexHandler.addToType("Path", vertex);
 }
 
-void CustomOpenGLWidget::prepareSelectedEdgesToDraw() {
-    if (preparedSelectedEdges != nullptr) delete[] preparedSelectedEdges;
-    //Setting coordinates and colors of selected
-    preparedSelectedEdges = new float[4 * selectedEdges.size()];
-    int i = 0;
-    for (auto pair : selectedEdges){
-        preparedSelectedEdges[i] = (float) pair.second->vFrom->lon;
-        preparedSelectedEdges[i + 1] = (float) pair.second->vFrom->lat;
-        preparedSelectedEdges[i + 2] = (float) pair.second->vTo->lon;
-        preparedSelectedEdges[i + 3] = (float) pair.second->vTo->lat;
-        i += 4;
-    }
-}*/
+void CustomOpenGLWidget::drawAlgResult() {
+    if (algResult == nullptr) return;
 
-/*void CustomOpenGLWidget::prepareAllEdgesToDraw() {
-    prepareCoreEdgesToDraw();
-    prepareSelectedEdgesToDraw();
-}*/
+    if (hlReverseEdges)
+        edgeHandler.drawType("RSE", this);
+    if (hlForwardEdges)
+        edgeHandler.drawType("FSE", this);
+    if (hlReversePath)
+        edgeHandler.drawType("RSPE", this);
+    if (hlForwardPath)
+        edgeHandler.drawType("FSPE", this);
+}
 
+void CustomOpenGLWidget::processResult(const AlgResult* r) {
+    initAlgResult(r);
+    update();
+}
+
+void CustomOpenGLWidget::dropCurrentResultSl() {
+    dropAlgResult();
+}
+
+void CustomOpenGLWidget::dropAlgResult() {
+    edgeHandler.clearType("RSE");
+    edgeHandler.clearType("FSE");
+    edgeHandler.clearType("RSPE");
+    edgeHandler.clearType("FSPE");
+    vertexHandler.clearType("Path");
+    delete algResult;
+    algResult = nullptr;
+    update();
+}
+
+void CustomOpenGLWidget::hlPathChanged(bool f) {
+    hlPath = f;
+    update();
+}
+
+void CustomOpenGLWidget::hlFSPChanged(bool f) {
+    hlForwardPath = f;
+    update();
+}
+
+void CustomOpenGLWidget::hlRSPChanged(bool f) {
+    hlReversePath = f;
+    update();
+}
+
+void CustomOpenGLWidget::hlFSAChanged(bool f) {
+    hlForwardEdges = f;
+    update();
+}
+
+void CustomOpenGLWidget::hlRSAChanged(bool f) {
+    hlReverseEdges = f;
+    update();
+}
+
+void CustomOpenGLWidget::pathColorChanged(QColor c) {
+    pathColor = std::move(c);
+    vertexHandler.setColorToType("Path", pathColor);
+    update();
+}
+
+void CustomOpenGLWidget::fspColorChanged(QColor c) {
+    forwardSearchPathEdgesColor = std::move(c);
+    edgeHandler.setColorToType("FSPE", forwardSearchPathEdgesColor);
+    update();
+}
+
+void CustomOpenGLWidget::rspColorChanged(QColor c) {
+    reverseSearchPathEdgesColor = std::move(c);
+    edgeHandler.setColorToType("RSPE", reverseSearchPathEdgesColor);
+    update();
+}
+
+void CustomOpenGLWidget::fsaColorChanged(QColor c) {
+    forwardSearchEdgesColor = std::move(c);
+    edgeHandler.setColorToType("FSE", forwardSearchEdgesColor);
+    update();
+}
+
+void CustomOpenGLWidget::rsaColorChanged(QColor c) {
+    reverseSearchEdgesColor = std::move(c);
+    edgeHandler.setColorToType("RSE", reverseSearchEdgesColor);
+    update();
+}
 

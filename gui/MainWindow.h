@@ -8,6 +8,7 @@
 #include <QMainWindow>
 #include <QOpenGLWidget>
 #include <QFileDialog>
+#include <classes/Algorithms.h>
 
 namespace Ui {
     class MainWindow;
@@ -36,6 +37,13 @@ private slots:
     void fileSave();
     void fileSave_as();
     void printFileName(const QString& str);
+
+    void findPath();
+    void updateLabelsUponResultGetsFound(const AlgResult*);
+    void dropResultLabels();
+
+signals:
+    void pathFound(const AlgResult*);
 };
 
 

@@ -300,17 +300,29 @@ void Graph::read_binary(const std::string &filename) {
     unsigned long id2;
     long idfrom, idto;
     double weight;
+    int c = 0;
     do {
         file.read(memblock2, sizeof(memblock2));
         id2 = *(unsigned long*)memblock2;
         idfrom = *(long*)(memblock2 + sizeof(unsigned long));
         idto = *(long*)(memblock2 + sizeof(unsigned long) + sizeof(long));
         weight = *(double *)(memblock2 + sizeof(unsigned long) + 2 * sizeof(long));
+
+        //
+//        unsigned long wl = *(unsigned long *)(memblock2 + sizeof(unsigned long) + 2 * sizeof(long));
+//        for (int i = sizeof(unsigned long) * 8 - 1; i >= 0; i--){
+//            printf("%ld", ((wl & ((unsigned long)1 << i)) >> i));
+//        }
+//        std::cout << std::endl;
+        //
+
+        if (weight < 0) c++;
         if (!(id2 == 0 && idfrom == 0 && idto == 0 && weight == 0)){
             auto edge = new Edge(id2, vertices[idfrom], vertices[idto], weight);
             edges.insert({id2, edge});
         }
     } while (!(id2 == 0 && idfrom == 0 && idto == 0 && weight == 0));
+    std::cout << "Amount of negative weight weights (wtf): " << c << '\n';
     file.close();
     normalize();
 }

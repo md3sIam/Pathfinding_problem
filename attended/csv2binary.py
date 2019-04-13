@@ -1,9 +1,9 @@
 import struct
 
 
-nodes_filename = "../maps/open_test/London_nodes.csv"
-edges_filename = "../maps/open_test/London_id_roads.csv"
-record_filename = "../maps/binaries/london.graph"
+nodes_filename = "../maps/open_test/SPb3_nodes.csv"
+edges_filename = "../maps/open_test/SPb3_id_roads.csv"
+record_filename = "../maps/binaries/sbp3_test.graph"
 
 
 file_record = open(record_filename, "wb")
@@ -49,3 +49,24 @@ print("Edges done")
 file_record.write(struct.pack('llld', 0, 0, 0, 0))
 
 file_record.close()
+
+# -----------
+# just check
+file_check = open(record_filename, 'rb')
+
+while True:
+    pack = file_check.read(24)
+    id, lon, lat = struct.unpack('ldd', pack)
+    if id == 0 and lon == 0 and lat == 0:
+        break
+
+while True:
+    pack = file_check.read(32)
+    id, idf, idt, weight = struct.unpack('llld', pack)
+    print(weight)
+    print(bin(struct.unpack('l', struct.pack('d', weight))[0]))
+    if id == 0 and idf == 0 and idt == 0 and weight == 0:
+        break
+
+file_check.close()
+print("file check done!")

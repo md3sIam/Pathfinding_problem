@@ -15,6 +15,7 @@
 #include <QOpenGLContext>
 #include <QColorDialog>
 #include <gui/VertexButton.h>
+#include <classes/Algorithms.h>
 #include "../classes/Graph/Graph.h"
 #include "classes/Category.h"
 #include "custom_widgets/MultiToggleButton.h"
@@ -34,6 +35,23 @@ public slots:
     void changeVertexSize(int value);
     void changeClickMode(uint mode);
     void highlightSl(bool);
+
+    // Processing results
+    void processResult(const AlgResult*);
+    void dropCurrentResultSl();
+
+    // Result view
+    void hlPathChanged(bool);
+    void hlFSPChanged(bool);
+    void hlRSPChanged(bool);
+    void hlFSAChanged(bool);
+    void hlRSAChanged(bool);
+
+    void pathColorChanged(QColor);
+    void fspColorChanged(QColor);
+    void rspColorChanged(QColor);
+    void fsaColorChanged(QColor);
+    void rsaColorChanged(QColor);
 
     // Linking vertices
     void linkSelVerticesTogether();
@@ -55,6 +73,7 @@ public slots:
     void changeEdgeColor(const QColor& color);
     void changeSelectedEdgeColor(const QColor& color);
 
+
 private slots:
     void checkForEnablingSearchButton(unsigned long, unsigned long, unsigned long,unsigned long);
 
@@ -75,19 +94,19 @@ private:
     //OPENGL INFO
     Graph* graph;
     int initialWidth, initialHeight;
-    float vertexRadius = 6;
-    float zoom = 1,
-        shiftX = 0,
-        shiftY = 0;
-    float zoomAngle = 0;
-    float recentShiftX = 0,
-        recentShiftY = 0;
+    float vertexRadius;
+    float zoom,
+        shiftX,
+        shiftY;
+    float zoomAngle;
+    float recentShiftX,
+        recentShiftY;
     bool wasMouseMoved;
-    bool vertexHighlight = false;
-    int arrowShiftSpeed = 20;
-    int pixelRadiusClickAreaSearch = 100;
+    bool vertexHighlight;
+    int arrowShiftSpeed;
+    int pixelRadiusClickAreaSearch;
 
-    // TESTING
+    // TO DRAW
     QOpenGLShaderProgram* edge_default_shader_program;
     void drawEdges(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
     void drawAllEdges();
@@ -101,7 +120,19 @@ private:
 
     CategoriesContainer<Vertex> vertexHandler;
     void initVertexHandler();
-    // END OF TESTING
+
+    // FOR ALGORITHM RESULTS
+    const AlgResult* algResult = nullptr;
+    bool hlPath = true,
+         hlForwardPath = true,
+         hlReversePath = true,
+         hlForwardEdges = true,
+         hlReverseEdges = true;
+
+    void initAlgResult(const AlgResult*);
+    void drawAlgResult();
+    void dropAlgResult();
+    // END OF TO DRAW
 
     // Colors
     QColor vertexColor;
@@ -109,6 +140,12 @@ private:
 
     QColor edgeColor;
     QColor selectedEdgesColor;
+
+    QColor pathColor;
+    QColor forwardSearchPathEdgesColor;
+    QColor reverseSearchPathEdgesColor;
+    QColor forwardSearchEdgesColor;
+    QColor reverseSearchEdgesColor;
 
     //SELECTIONS
     /*std::map<long, Vertex*> selectedVertices;
@@ -157,6 +194,7 @@ private:
 
 
     template <class T> friend class CategoriesContainer;
+    friend class MainWindow;
 };
 
 

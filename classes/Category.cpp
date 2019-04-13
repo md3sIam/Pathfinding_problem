@@ -43,37 +43,6 @@ void CategoriesContainer<T>::clearType(const std::string &str) {
     types[str]->clear();
 }
 
-/*template <class T>
-void Category<T>::prepareToDraw(float **array) const {
-    delete [] *array;
-    if (sequence.size() == 0){
-        *array = nullptr;
-        return;
-    }
-
-    if (typeid(T) == typeid(Vertex)) {
-        (*array) = new float[2 * sequence.size()];
-        unsigned i = 0;
-        for (const T *vertex : sequence) {
-            (*array)[i] = vertex->lon;
-            (*array)[i + 1] = vertex->lat;
-            i += 2;
-        }
-        return;
-    }
-
-    if (typeid(T) == typeid(Edge)){
-        (*array) = new float[4 * sequence.size()];
-        unsigned i = 0;
-        for (const T* edge : sequence) {
-            (*array)[i] = edge->vFrom->lon;
-            (*array)[i + 1] = edge->vFrom->lat;
-            (*array)[i + 2] = edge->vTo->lon;
-            (*array)[i + 3] = edge->vTo->lat;
-            i += 4;
-        }
-    }
-}*/
 template <>
 void Category<Vertex>::prepareToDraw(float **array) const {
     delete [] *array;
