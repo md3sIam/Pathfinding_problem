@@ -325,7 +325,7 @@
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
-              <string>ReverseSearch Part of Path</string>
+              <string>Reverse Search Part of Path</string>
              </property>
             </widget>
            </item>
