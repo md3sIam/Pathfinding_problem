@@ -25,6 +25,7 @@ struct AlgResult {
 class Algorithms {
 
 private:
+    // algorithms
     static const AlgResult* d(const Graph* g, Vertex* start, Vertex* finish);
 
     static const AlgResult* dws(const Graph* g, Vertex* start, Vertex* finish);
@@ -34,6 +35,9 @@ private:
     static const AlgResult* astar(const Graph* g, Vertex* start, Vertex* finish);
     static const AlgResult* bastar(const Graph* g, Vertex* start, Vertex* finish);
     static const AlgResult* pastar(const Graph* g, Vertex* start, Vertex* finish);
+
+    // attended functions
+    static double evklidDistance(const Vertex* a, const Vertex* b);
 
 public:
     enum Algorithm {DIJKSTRA = 0, DIJKSTRA_WITH_STOP, ASTAR};

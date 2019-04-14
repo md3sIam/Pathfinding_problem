@@ -774,6 +774,7 @@ void CustomOpenGLWidget::drawAlgResult() {
 }
 
 void CustomOpenGLWidget::processResult(const AlgResult* r) {
+    if (algResult != nullptr) dropAlgResult();
     initAlgResult(r);
     update();
 }
