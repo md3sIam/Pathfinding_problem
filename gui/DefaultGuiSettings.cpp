@@ -13,3 +13,4 @@ const QColor dgs::forwardSearchPathEdgeColor = {255, 0, 255};
 const QColor dgs::reverseSearchPathEdgeColor = {255, 255, 0};
 const QColor dgs::forwardSearchAreaColor = {0, 255, 0};
 const QColor dgs::reverseSearchAreaColor = {0, 0, 255};
+const QColor dgs::commonSearchAreaColor = {0, 255, 255};

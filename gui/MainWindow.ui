@@ -149,6 +149,9 @@
            </item>
            <item row="1" column="0" colspan="2">
             <widget class="QComboBox" name="algorithm_chooser">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <item>
               <property name="text">
                <string>Dijkstra</string>
@@ -174,6 +177,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Bidirectional</string>
              </property>
@@ -186,6 +192,9 @@
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string>Parallel</string>
@@ -382,6 +391,16 @@
            </item>
            <item row="7" column="0" colspan="2">
             <widget class="ColorChooser" name="pathColorChooser">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="0" colspan="2">
+            <widget class="ColorChooser" name="caColorChooser">
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
              </property>

@@ -196,7 +196,177 @@ const AlgResult* Algorithms::dws(const Graph* g, Vertex* start, Vertex* finish) 
     return result;
 }
 
-const AlgResult* Algorithms::bdws(const Graph* g, Vertex* start, Vertex* finish) {}
+const AlgResult* Algorithms::bdws(const Graph* g, Vertex* start, Vertex* finish) {
+    const int AMOUNT_OF_COMMON = 10;
+    //// initialization of result variable
+    auto result = new AlgResult;
+
+    //// initialization of working maps
+    // forward search
+    std::unordered_set<const Vertex*> is_processed;
+    std::unordered_map<const Vertex*, double> dist;
+    dist.insert({start, 0.0});
+    std::unordered_map<const Vertex*, Edge*> edge_to;
+    // reverse search
+    std::unordered_set<const Vertex*> is_processed_r;
+    std::unordered_map<const Vertex*, double> dist_r;
+    dist_r.insert({finish, 0.0});
+    std::unordered_map<const Vertex*, Edge*> edge_to_r;
+
+    //// priority queues initialization
+    auto comparator = [&dist](const Vertex* l, const Vertex* r){
+        return dist.find(l)->second > dist.find(r)->second;
+    };
+    auto comparator_r = [&dist_r](const Vertex* l, const Vertex* r){
+        return dist_r.find(l)->second > dist_r.find(r)->second;
+    };
+    std::priority_queue<Vertex*, std::vector<Vertex*>, decltype(comparator)> queue(comparator);
+    std::priority_queue<Vertex*, std::vector<Vertex*>, decltype(comparator_r)> queue_r(comparator_r);
+
+
+    //// amount of meetings of 2 searches
+    int meetings = 0;
+    bool forward_end = false,
+         reverse_end = false;
+    Vertex* center = nullptr;
+
+    //// official algorithm start
+    time_t time_start = std::clock();
+    queue.push(start);
+    queue_r.push(finish);
+    // while both queues are not empty and amount of meetings is less then 20
+    //int c = 0;
+    while (!(queue.empty() || queue_r.empty()) && meetings < AMOUNT_OF_COMMON ){
+        //std::cout << ++c << std::endl;
+        //// forward step
+        // picking the closest vertex
+        //std::cout << "Main Cycle: " << ++c << std::endl;
+        Vertex* currentVertex = queue.top();
+        queue.pop();
+
+        // break if finish vertex
+        if (currentVertex == finish) {forward_end = true; break;}
+
+        // the vertex becomes processed
+        is_processed.insert(currentVertex);
+
+        if (is_processed_r.find(currentVertex) != is_processed_r.end()){
+            if (center == nullptr || dist[currentVertex] + dist_r[currentVertex] < dist[center] + dist_r[center] + 1.0e-6){
+                center = currentVertex;
+                meetings = 0;
+                //std::cout << "new f center\n";
+            }
+            else if (++meetings > AMOUNT_OF_COMMON ) break;
+        }
+
+        // every non-processed incident vertex is going to the queue
+        for (Edge* edge : currentVertex->incidentEdges){
+            result->forwardSearchEdges.insert(edge);
+            // getting next incident vertex
+            Vertex* nextVertex = currentVertex == edge->vFrom ? edge->vTo : edge->vFrom;
+            // if it's processed, skip it
+            if (is_processed.find(nextVertex) != is_processed.end()) continue;
+            // getting new dist
+            double currentDist = dist[currentVertex] + edge->weight;
+            // if it's not computed or less than already computed, change dist
+            // if for the first time
+            if (dist.find(nextVertex) == dist.end()){
+                dist.insert({nextVertex, currentDist});
+                edge_to.insert({nextVertex, edge});
+                queue.push(nextVertex);
+            }
+            else if (dist[nextVertex] > currentDist){
+                dist[nextVertex] = currentDist;
+                edge_to[nextVertex] = edge;
+            }
+        }
+
+        //// reverse step
+        // picking the closest vertex
+        //std::cout << "Main Cycle: " << ++c << std::endl;
+        currentVertex = queue_r.top();
+        queue_r.pop();
+
+        // break if finish vertex
+        if (currentVertex == start) {reverse_end = true; break;}
+
+        // the vertex becomes processed
+        is_processed_r.insert(currentVertex);
+
+        // checking for the meeting
+        if (is_processed.find(currentVertex) != is_processed.end()){
+            if (center == nullptr || dist[currentVertex] + dist_r[currentVertex] < dist[center] + dist_r[center] + 1.0e-6){
+                center = currentVertex;
+                meetings = 0;
+                //std::cout << "new r center\n";
+            }
+            else if (++meetings > AMOUNT_OF_COMMON) break;
+        }
+
+        // every non-processed incident vertex is going to the queue
+        for (Edge* edge : currentVertex->incidentEdges){
+            result->reverseSearchEdges.insert(edge);
+            // getting next incident vertex
+            Vertex* nextVertex = currentVertex == edge->vFrom ? edge->vTo : edge->vFrom;
+            // if it's processed, skip it
+            if (is_processed_r.find(nextVertex) != is_processed_r.end()) continue;
+            // getting new dist
+            double currentDist = dist_r[currentVertex] + edge->weight;
+            // if it's not computed or less than already computed, change dist
+            // if for the first time
+            if (dist_r.find(nextVertex) == dist_r.end()){
+                dist_r.insert({nextVertex, currentDist});
+                edge_to_r.insert({nextVertex, edge});
+                queue_r.push(nextVertex);
+            }
+            else if (dist_r[nextVertex] > currentDist){
+                dist_r[nextVertex] = currentDist;
+                edge_to_r[nextVertex] = edge;
+            }
+        }
+    }
+
+    //// algorithm done, checking for path existence
+    if (center == nullptr){
+        result->time = double(clock() - time_start) / CLOCKS_PER_SEC;
+        result->found = false;
+        return result;
+    }
+    //// building the path
+    // forward search part
+    Vertex* currentVertex = center;
+    result->path.push_back(center);
+    do {
+        //std::cout << "Building path: " << ++c << std::endl;
+        Edge* currentEdge = edge_to[currentVertex];
+        result->length += currentEdge->weight;
+        //std::cout << currentEdge->weight << std::endl;
+        //length_check += currentEdge->weight;
+        result->forwardSearchPathEdges.insert(currentEdge);
+        currentVertex = currentVertex == currentEdge->vFrom ? currentEdge->vTo : currentEdge->vFrom;
+        result->path.push_front(currentVertex);
+        //std::cout << "Current Vertex Id: " << currentVertex->id << std::endl;
+    } while (currentVertex != start);
+
+    // reverse search part
+    currentVertex = center;
+    do {
+        //std::cout << "Building path: " << ++c << std::endl;
+        Edge* currentEdge = edge_to_r[currentVertex];
+        result->length += currentEdge->weight;
+        //std::cout << currentEdge->weight << std::endl;
+        //length_check += currentEdge->weight;
+        result->reverseSearchPathEdges.insert(currentEdge);
+        currentVertex = currentVertex == currentEdge->vFrom ? currentEdge->vTo : currentEdge->vFrom;
+        result->path.push_back(currentVertex);
+        //std::cout << "Current Vertex Id: " << currentVertex->id << std::endl;
+    } while (currentVertex != finish);
+    result->time = double(clock() - time_start) / CLOCKS_PER_SEC;
+    for (Edge* edge : result->forwardSearchEdges)
+        if (result->reverseSearchEdges.find(edge) != result->reverseSearchEdges.end())
+            result->commonSearchEdges.insert(edge);
+    return result;
+}
 
 const AlgResult* Algorithms::pdws(const Graph* g, Vertex* start, Vertex* finish) {}
 
@@ -266,13 +436,13 @@ const AlgResult* Algorithms::astar(const Graph* g, Vertex* start, Vertex* finish
         return result;
     }
     // building the path
-    result->length = dist[finish];
     result->path.push_front(finish);
     Vertex* currentVertex = finish;
     double length_check = 0;
     do {
         //std::cout << "Building path: " << ++c << std::endl;
         Edge* currentEdge = edge_to[currentVertex];
+        result->length += currentEdge->weight;
         //std::cout << currentEdge->weight << std::endl;
         length_check += currentEdge->weight;
         result->forwardSearchPathEdges.insert(currentEdge);
@@ -285,7 +455,184 @@ const AlgResult* Algorithms::astar(const Graph* g, Vertex* start, Vertex* finish
     return result;
 }
 
-const AlgResult*Algorithms::bastar(const Graph* g, Vertex* start, Vertex* finish) {}
+const AlgResult*Algorithms::bastar(const Graph* g, Vertex* start, Vertex* finish) {
+    const int AMOUNT_OF_COMMON = 40;
+    //// initialization of result variable
+    auto result = new AlgResult;
+
+    //// initialization of working maps
+    // forward search
+    std::unordered_set<const Vertex*> is_processed;
+    std::unordered_map<const Vertex*, double> dist;
+    dist.insert({start, 0.0});
+    std::unordered_map<const Vertex*, double> minDistToFinish;
+    minDistToFinish.insert({start, evklidDistance(start, finish)});
+    std::unordered_map<const Vertex*, Edge*> edge_to;
+    // reverse search
+    std::unordered_set<const Vertex*> is_processed_r;
+    std::unordered_map<const Vertex*, double> dist_r;
+    dist_r.insert({finish, 0.0});
+    std::unordered_map<const Vertex*, double> minDistToStart;
+    minDistToFinish.insert({finish, evklidDistance(start, finish)});
+    std::unordered_map<const Vertex*, Edge*> edge_to_r;
+
+    //// priority queues initialization
+    auto comparator = [&dist, &minDistToFinish](const Vertex* l, const Vertex* r){
+        return dist.find(l)->second + minDistToFinish.find(l)->second > dist.find(r)->second + minDistToFinish.find(r)->second;
+    };
+    auto comparator_r = [&dist_r, &minDistToStart](const Vertex* l, const Vertex* r){
+        return dist_r.find(l)->second + minDistToStart.find(l)->second > dist_r.find(r)->second + minDistToStart.find(r)->second;
+
+    };
+    std::priority_queue<Vertex*, std::vector<Vertex*>, decltype(comparator)> queue(comparator);
+    std::priority_queue<Vertex*, std::vector<Vertex*>, decltype(comparator_r)> queue_r(comparator_r);
+
+
+    //// amount of meetings of 2 searches
+    int meetings = 0;
+    bool forward_end = false,
+            reverse_end = false;
+    Vertex* center = nullptr;
+
+    //// official algorithm start
+    time_t time_start = std::clock();
+    queue.push(start);
+    queue_r.push(finish);
+    // while both queues are not empty and amount of meetings is less then 20
+    //int c = 0;
+    while (!(queue.empty() || queue_r.empty()) && meetings < AMOUNT_OF_COMMON ){
+        //std::cout << ++c << std::endl;
+        //// forward step
+        // picking the closest vertex
+        //std::cout << "Main Cycle: " << ++c << std::endl;
+        Vertex* currentVertex = queue.top();
+        queue.pop();
+
+        // break if finish vertex
+        if (currentVertex == finish) {forward_end = true; break;}
+
+        // the vertex becomes processed
+        is_processed.insert(currentVertex);
+
+        if (is_processed_r.find(currentVertex) != is_processed_r.end()){
+            if (center == nullptr || dist[currentVertex] + dist_r[currentVertex] < dist[center] + dist_r[center]){
+                center = currentVertex;
+                meetings = 0;
+                //std::cout << "new f center\n";
+            }
+            else if (++meetings > AMOUNT_OF_COMMON ) break;
+        }
+
+        // every non-processed incident vertex is going to the queue
+        for (Edge* edge : currentVertex->incidentEdges){
+            result->forwardSearchEdges.insert(edge);
+            // getting next incident vertex
+            Vertex* nextVertex = currentVertex == edge->vFrom ? edge->vTo : edge->vFrom;
+            // if it's processed, skip it
+            if (is_processed.find(nextVertex) != is_processed.end()) continue;
+            // getting new dist
+            double currentDist = dist[currentVertex] + edge->weight;
+            // if it's not computed or less than already computed, change dist
+            // if for the first time
+            if (dist.find(nextVertex) == dist.end()){
+                dist.insert({nextVertex, currentDist});
+                edge_to.insert({nextVertex, edge});
+                minDistToFinish.insert({nextVertex, evklidDistance(nextVertex, finish)});
+                queue.push(nextVertex);
+            }
+            else if (dist[nextVertex] > currentDist){
+                dist[nextVertex] = currentDist;
+                edge_to[nextVertex] = edge;
+            }
+        }
+
+        //// reverse step
+        // picking the closest vertex
+        //std::cout << "Main Cycle: " << ++c << std::endl;
+        currentVertex = queue_r.top();
+        queue_r.pop();
+
+        // break if finish vertex
+        if (currentVertex == start) {reverse_end = true; break;}
+
+        // the vertex becomes processed
+        is_processed_r.insert(currentVertex);
+
+        // checking for the meeting
+        if (is_processed.find(currentVertex) != is_processed.end()){
+            if (center == nullptr || dist[currentVertex] + dist_r[currentVertex] < dist[center] + dist_r[center]){
+                center = currentVertex;
+                meetings = 0;
+                //std::cout << "new r center\n";
+            }
+            else if (++meetings > AMOUNT_OF_COMMON) break;
+        }
+
+        // every non-processed incident vertex is going to the queue
+        for (Edge* edge : currentVertex->incidentEdges){
+            result->reverseSearchEdges.insert(edge);
+            // getting next incident vertex
+            Vertex* nextVertex = currentVertex == edge->vFrom ? edge->vTo : edge->vFrom;
+            // if it's processed, skip it
+            if (is_processed_r.find(nextVertex) != is_processed_r.end()) continue;
+            // getting new dist
+            double currentDist = dist_r[currentVertex] + edge->weight;
+            // if it's not computed or less than already computed, change dist
+            // if for the first time
+            if (dist_r.find(nextVertex) == dist_r.end()){
+                dist_r.insert({nextVertex, currentDist});
+                edge_to_r.insert({nextVertex, edge});
+                minDistToStart.insert({nextVertex, evklidDistance(nextVertex, start)});
+                queue_r.push(nextVertex);
+            }
+            else if (dist_r[nextVertex] > currentDist){
+                dist_r[nextVertex] = currentDist;
+                edge_to_r[nextVertex] = edge;
+            }
+        }
+    }
+
+    //// algorithm done, checking for path existence
+    if (center == nullptr){
+        result->time = double(clock() - time_start) / CLOCKS_PER_SEC;
+        result->found = false;
+        return result;
+    }
+    //// building the path
+    // forward search part
+    Vertex* currentVertex = center;
+    result->path.push_back(center);
+    do {
+        //std::cout << "Building path: " << ++c << std::endl;
+        Edge* currentEdge = edge_to[currentVertex];
+        result->length += currentEdge->weight;
+        //std::cout << currentEdge->weight << std::endl;
+        //length_check += currentEdge->weight;
+        result->forwardSearchPathEdges.insert(currentEdge);
+        currentVertex = currentVertex == currentEdge->vFrom ? currentEdge->vTo : currentEdge->vFrom;
+        result->path.push_front(currentVertex);
+        //std::cout << "Current Vertex Id: " << currentVertex->id << std::endl;
+    } while (currentVertex != start);
+
+    // reverse search part
+    currentVertex = center;
+    do {
+        //std::cout << "Building path: " << ++c << std::endl;
+        Edge* currentEdge = edge_to_r[currentVertex];
+        result->length += currentEdge->weight;
+        //std::cout << currentEdge->weight << std::endl;
+        //length_check += currentEdge->weight;
+        result->reverseSearchPathEdges.insert(currentEdge);
+        currentVertex = currentVertex == currentEdge->vFrom ? currentEdge->vTo : currentEdge->vFrom;
+        result->path.push_back(currentVertex);
+        //std::cout << "Current Vertex Id: " << currentVertex->id << std::endl;
+    } while (currentVertex != finish);
+    result->time = double(clock() - time_start) / CLOCKS_PER_SEC;
+    for (Edge* edge : result->forwardSearchEdges)
+        if (result->reverseSearchEdges.find(edge) != result->reverseSearchEdges.end())
+            result->commonSearchEdges.insert(edge);
+    return result;
+}
 
 const AlgResult* Algorithms::pastar(const Graph* g, Vertex* start, Vertex* finish) {}
 

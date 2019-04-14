@@ -42,6 +42,7 @@ public:
     static const QColor reverseSearchPathEdgeColor;
     static const QColor forwardSearchAreaColor;
     static const QColor reverseSearchAreaColor;
+    static const QColor commonSearchAreaColor;
 };
 
 #endif //PATHFINDING_PROBLEM_STANDARDGUISETTINGS_H

@@ -37,6 +37,7 @@ CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
     reverseSearchPathEdgesColor = dgs::reverseSearchPathEdgeColor;
     forwardSearchEdgesColor = dgs::forwardSearchAreaColor;
     reverseSearchEdgesColor = dgs::reverseSearchAreaColor;
+    commonAreaEdgesColor = dgs::commonSearchAreaColor;
 
     initVertexHandler();
     initEdgeHandler();
@@ -137,6 +138,7 @@ void CustomOpenGLWidget::initEdgeHandler() {
     edgeHandler.createType("RSPE", reverseSearchPathEdgesColor);
     edgeHandler.createType("FSE", forwardSearchEdgesColor);
     edgeHandler.createType("RSE", reverseSearchEdgesColor);
+    edgeHandler.createType("CE", commonAreaEdgesColor);
 }
 
 void CustomOpenGLWidget::initializeGL()
@@ -479,7 +481,7 @@ void CustomOpenGLWidget::keyPressEvent(QKeyEvent *e) {
     //connect vertices
     int count = 0;
     if ((key == Qt::Key_C || key == /* c */1057) && vertexHandler["Selected"].getSize() >= 2){
-        linkAllSelectedVerticesTogether();
+        linkSelectedVerticesSequentially();
         return;
     }
 
@@ -756,6 +758,9 @@ void CustomOpenGLWidget::initAlgResult(const AlgResult * r) {
     for (Edge* edge : r->reverseSearchEdges)
         edgeHandler.addToType("RSE", edge);
 
+    for (Edge* edge : r->commonSearchEdges)
+        edgeHandler.addToType("CE", edge);
+
     for (Vertex* vertex : r->path)
         vertexHandler.addToType("Path", vertex);
 }
@@ -767,6 +772,8 @@ void CustomOpenGLWidget::drawAlgResult() {
         edgeHandler.drawType("RSE", this);
     if (hlForwardEdges)
         edgeHandler.drawType("FSE", this);
+    if (hlForwardEdges && hlReverseEdges)
+        edgeHandler.drawType("CE", this);
     if (hlReversePath)
         edgeHandler.drawType("RSPE", this);
     if (hlForwardPath)
@@ -788,6 +795,7 @@ void CustomOpenGLWidget::dropAlgResult() {
     edgeHandler.clearType("FSE");
     edgeHandler.clearType("RSPE");
     edgeHandler.clearType("FSPE");
+    edgeHandler.clearType("CE");
     vertexHandler.clearType("Path");
     delete algResult;
     algResult = nullptr;
@@ -849,3 +857,8 @@ void CustomOpenGLWidget::rsaColorChanged(QColor c) {
     update();
 }
 
+void CustomOpenGLWidget::caColorChanged(QColor c) {
+    commonAreaEdgesColor = std::move(c);
+    edgeHandler.setColorToType("CE", commonAreaEdgesColor);
+    update();
+}

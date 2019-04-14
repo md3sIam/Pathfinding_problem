@@ -52,6 +52,7 @@ public slots:
     void rspColorChanged(QColor);
     void fsaColorChanged(QColor);
     void rsaColorChanged(QColor);
+    void caColorChanged(QColor);
 
     // Linking vertices
     void linkSelVerticesTogether();
@@ -146,6 +147,7 @@ private:
     QColor reverseSearchPathEdgesColor;
     QColor forwardSearchEdgesColor;
     QColor reverseSearchEdgesColor;
+    QColor commonAreaEdgesColor;
 
     //SELECTIONS
     /*std::map<long, Vertex*> selectedVertices;

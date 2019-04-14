@@ -13,13 +13,14 @@
 struct AlgResult {
     bool found = true;
     std::list<Vertex*> path;
-    double length = -1;
-    double time = -1;
+    double length = 0;
+    double time = 0;
 
     std::unordered_set<Edge*> forwardSearchPathEdges;
     std::unordered_set<Edge*> reverseSearchPathEdges;
     std::unordered_set<Edge*> forwardSearchEdges;
     std::unordered_set<Edge*> reverseSearchEdges;
+    std::unordered_set<Edge*> commonSearchEdges;
 };
 
 class Algorithms {
@@ -36,7 +37,7 @@ private:
     static const AlgResult* bastar(const Graph* g, Vertex* start, Vertex* finish);
     static const AlgResult* pastar(const Graph* g, Vertex* start, Vertex* finish);
 
-    // attended functions
+    // attended methods
     static double evklidDistance(const Vertex* a, const Vertex* b);
 
 public:

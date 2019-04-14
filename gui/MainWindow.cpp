@@ -110,6 +110,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui->rsaColorChooser->setStr("Reverse Search Area Color");
     ui->rsaColorChooser->setColor(dgs::reverseSearchAreaColor);
     connect(ui->rsaColorChooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(rsaColorChanged(QColor)));
+
+    ui->caColorChooser->setStr("Common Search Area Color");
+    ui->caColorChooser->setColor(dgs::commonSearchAreaColor);
+    connect(ui->caColorChooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(caColorChanged(QColor)));
 }
 
 MainWindow::~MainWindow() {

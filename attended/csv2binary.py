@@ -1,9 +1,9 @@
 import struct
 
 
-nodes_filename = "../maps/open_test/SPb3_nodes.csv"
-edges_filename = "../maps/open_test/SPb3_id_roads.csv"
-record_filename = "../maps/binaries/sbp3_test.graph"
+nodes_filename = "../maps/open_test/NY_nodes.csv"
+edges_filename = "../maps/open_test/NY_id_roads.csv"
+record_filename = "../maps/binaries/ny_test.graph"
 
 
 file_record = open(record_filename, "wb")
