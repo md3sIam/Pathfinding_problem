@@ -113,7 +113,7 @@ void CategoriesContainer<T>::updateArray(const std::string &str) {
 }
 
 template <>
-void CategoriesContainer<Vertex>::drawType(const std::string &str, const CustomOpenGLWidget *widget) {
+void CategoriesContainer<Vertex>::drawType(const std::string &str, const CustomOpenGLWidget *widget, bool wider) {
     if (types[str]->is_changed) {
         types[str]->prepareToDraw(&arrayToDraw[str]);
         types[str]->is_changed = false;
@@ -125,15 +125,19 @@ void CategoriesContainer<Vertex>::drawType(const std::string &str, const CustomO
 }
 
 template <>
-void CategoriesContainer<Edge>::drawType(const std::string &str, const CustomOpenGLWidget *widget) {
+void CategoriesContainer<Edge>::drawType(const std::string &str, const CustomOpenGLWidget *widget, bool wider) {
     if (types[str]->is_changed) {
         types[str]->prepareToDraw(&arrayToDraw[str]);
         types[str]->is_changed = false;
     }
 
     if (types[str]->getSize() == 0) return;
-    widget->drawEdges(widget->edge_default_shader_program,
+    if (!wider)
+        widget->drawEdges(widget->edge_default_shader_program,
                          types[str]->color, arrayToDraw[str], 2 * types[str]->getSize());
+    else
+        widget->drawEdges(widget->wider_edge_shader_program,
+                          types[str]->color, arrayToDraw[str], 2 * types[str]->getSize());
 }
 
 template <class T>

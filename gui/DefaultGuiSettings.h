@@ -26,7 +26,7 @@ public:
         pixelRadiusClickAreaSearch = 100;
 
     static constexpr bool vertexHighlight = false,
-         hlPath = true,
+         hlPath = false,
          hlForwardPath = true,
          hlReversePath = true,
          hlForwardEdges = true,

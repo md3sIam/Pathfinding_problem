@@ -20,6 +20,7 @@
 #include "classes/Category.h"
 #include "custom_widgets/MultiToggleButton.h"
 #include "custom_widgets/MapInfo.h"
+#include "DefaultGuiSettings.h"
 
 class CustomOpenGLWidget : public QOpenGLWidget
 {
@@ -109,6 +110,7 @@ private:
 
     // TO DRAW
     QOpenGLShaderProgram* edge_default_shader_program;
+    QOpenGLShaderProgram* wider_edge_shader_program;
     void drawEdges(QOpenGLShaderProgram*, const QColor&, const float*, int) const;
     void drawAllEdges();
 
@@ -124,11 +126,11 @@ private:
 
     // FOR ALGORITHM RESULTS
     const AlgResult* algResult = nullptr;
-    bool hlPath = true,
-         hlForwardPath = true,
-         hlReversePath = true,
-         hlForwardEdges = true,
-         hlReverseEdges = true;
+    bool hlPath = dgs::hlPath,
+         hlForwardPath = dgs::hlForwardPath,
+         hlReversePath = dgs::hlReversePath,
+         hlForwardEdges = dgs::hlForwardEdges,
+         hlReverseEdges = dgs::hlReverseEdges;
 
     void initAlgResult(const AlgResult*);
     void drawAlgResult();

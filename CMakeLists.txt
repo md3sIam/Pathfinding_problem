@@ -39,13 +39,16 @@ add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         classes/Category.h
         classes/Algorithms.cpp
         classes/Algorithms.h
-        gui/custom_widgets/StartSearchButton.h gui/DefaultGuiSettings.cpp gui/AlgThread.cpp gui/AlgThread.h)
+        gui/custom_widgets/StartSearchButton.h
+        gui/DefaultGuiSettings.cpp
+        gui/AlgThread.cpp
+        gui/AlgThread.h)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
+#find_package(glfw3 REQUIRED)
+#find_package(glm REQUIRED)
 
 find_package(Qt5Widgets CONFIG REQUIRED)
 
@@ -58,29 +61,29 @@ if (OPENGL_FOUND)
     message(" ")
 endif()
 
-if (GLUT_FOUND)
-    message("GLUT found")
-    message("include dir: ${GLUT_INCLUDE_DIR}")
-    message("link libraries: ${GLUT_LIBRARY}")
-    message(" ")
-endif()
+#if (GLUT_FOUND)
+#    message("GLUT found")
+#    message("include dir: ${GLUT_INCLUDE_DIR}")
+#    message("link libraries: ${GLUT_LIBRARY}")
+#    message(" ")
+#endif()
 
-if (GLEW_FOUND)
-    message("FLEW found")
-    message("include dir: ${GLEW_INCLUDE_DIR}")
-    message("link libraries: ${GLEW_LIBRARY}")
-    message(" ")
-endif()
-
-if (glfw3_FOUND)
-    message("glfw3 found")
-    message(" ")
-endif()
-
-if (glm_FOUND)
-    message("glm found")
-    message(" ")
-endif()
+#if (GLEW_FOUND)
+#    message("FLEW found")
+#    message("include dir: ${GLEW_INCLUDE_DIR}")
+#    message("link libraries: ${GLEW_LIBRARY}")
+#    message(" ")
+#endif()
+#
+#if (glfw3_FOUND)
+#    message("glfw3 found")
+#    message(" ")
+#endif()
+#
+#if (glm_FOUND)
+#    message("glm found")
+#    message(" ")
+#endif()
 
 if (Qt5Widgets_FOUND)
     message(Qt5 found)
@@ -91,7 +94,7 @@ include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}
         ${OPENGL_LIBRARY}
         ${OPENGL_gl_LIBRARY}
-        ${GLUT_LIBRARY}
+#        ${GLUT_LIBRARY}
         ${GLEW_LIBRARY}
-        glfw
+#        glfw
         Qt5::Widgets)

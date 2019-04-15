@@ -67,7 +67,7 @@ public:
     void remove(T*);
 
     void clear();
-    void drawType(const std::string& str, const CustomOpenGLWidget* widget);
+    void drawType(const std::string& str, const CustomOpenGLWidget* widget, bool wider = false);
     void draw(const CustomOpenGLWidget* widget);
 };
 

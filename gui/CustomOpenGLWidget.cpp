@@ -128,6 +128,7 @@ void CustomOpenGLWidget::initVertexHandler() {
     vertexHandler.createType("Core", vertexColor);
     vertexHandler.createType("Selected", selectedVertexColor);
     vertexHandler.createType("Path", pathColor);
+    vertexHandler.createType("Start-End", pathColor);
 }
 
 void CustomOpenGLWidget::initEdgeHandler() {
@@ -157,8 +158,11 @@ void CustomOpenGLWidget::initializeGL()
             "../shaders/v2/vertices_vertex_const_color_shader.glsl",
             "../shaders/v2/vertices_fragment_const_color_shader.glsl",
             "../shaders/v2/vertices_geom_const_color_shader.glsl");
-//    prepareAllEdgesToDraw();
-    //prepareAllVerticesToDraw();
+    wider_edge_shader_program = load_shaders(
+            "../shaders/wide_edge_shaders/wide_edge_vertex_shader.glsl",
+            "../shaders/wide_edge_shaders/wide_edge_fragment_shader.glsl",
+            "../shaders/wide_edge_shaders/wide_edge_geom_shader.glsl"
+            );
 
     makeCurrent();
     initialWidth = width();
@@ -174,6 +178,7 @@ void CustomOpenGLWidget::paintGL()
     if (vertexHighlight) {
         drawAllVertices();
     }
+    vertexHandler.drawType("Start-End", this);
 
 }
 
@@ -224,6 +229,7 @@ void CustomOpenGLWidget::drawAllVertices() {
     vertexHandler.drawType("Core", this);
     vertexHandler.drawType("Selected", this);
     if (hlPath) vertexHandler.drawType("Path", this);
+    vertexHandler.drawType("Start-End", this);
 }
 
 void CustomOpenGLWidget::drawVertices(QOpenGLShaderProgram* program,
@@ -763,6 +769,9 @@ void CustomOpenGLWidget::initAlgResult(const AlgResult * r) {
 
     for (Vertex* vertex : r->path)
         vertexHandler.addToType("Path", vertex);
+
+    vertexHandler.addToType("Start-End", r->path.front());
+    vertexHandler.addToType("Start-End", r->path.back());
 }
 
 void CustomOpenGLWidget::drawAlgResult() {
@@ -775,9 +784,9 @@ void CustomOpenGLWidget::drawAlgResult() {
     if (hlForwardEdges && hlReverseEdges)
         edgeHandler.drawType("CE", this);
     if (hlReversePath)
-        edgeHandler.drawType("RSPE", this);
+        edgeHandler.drawType("RSPE", this, true);
     if (hlForwardPath)
-        edgeHandler.drawType("FSPE", this);
+        edgeHandler.drawType("FSPE", this, true);
 }
 
 void CustomOpenGLWidget::processResult(const AlgResult* r) {
@@ -797,6 +806,7 @@ void CustomOpenGLWidget::dropAlgResult() {
     edgeHandler.clearType("FSPE");
     edgeHandler.clearType("CE");
     vertexHandler.clearType("Path");
+    vertexHandler.clearType("Start-End");
     delete algResult;
     algResult = nullptr;
     update();
