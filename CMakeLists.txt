@@ -39,7 +39,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         classes/Category.h
         classes/Algorithms.cpp
         classes/Algorithms.h
-        gui/custom_widgets/StartSearchButton.h gui/DefaultGuiSettings.cpp)
+        gui/custom_widgets/StartSearchButton.h gui/DefaultGuiSettings.cpp gui/AlgThread.cpp gui/AlgThread.h)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)

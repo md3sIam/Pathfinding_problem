@@ -9,6 +9,7 @@
 #include <QOpenGLWidget>
 #include <QFileDialog>
 #include <classes/Algorithms.h>
+#include "AlgThread.h"
 
 namespace Ui {
     class MainWindow;
@@ -30,6 +31,7 @@ private:
     Ui::MainWindow* ui;
     std::string current_filename;
     Graph* graph;
+    AlgThread algThread;
 
 private slots:
     void fileNew();

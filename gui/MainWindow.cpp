@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cmath>
 #include "DefaultGuiSettings.h"
+#include <QThread>
 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -73,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(ui->bidirectional_checkbox, SIGNAL(toggled(bool)), ui->parallel_checkbox, SLOT(setEnabled(bool)));
 
     connect(ui->search_button, SIGNAL(clicked()), this, SLOT(findPath()));
+    connect(&algThread, SIGNAL(algResultFound(const AlgResult*)), this, SIGNAL(pathFound(const AlgResult*)));
     connect(this, SIGNAL(pathFound(const AlgResult*)), ui->mapWidget, SLOT(processResult(const AlgResult*)));
     connect(this, SIGNAL(pathFound(const AlgResult*)), this, SLOT(updateLabelsUponResultGetsFound(const AlgResult*)));
 
@@ -146,8 +148,9 @@ void MainWindow::findPath() {
     else if (algIndex == 2)
         algIndex = Algorithms::ASTAR;
 
-    res = Algorithms::findPath(algIndex, ui->mapWidget->graph, start, end, isBidirectional, isParallel);
-    emit pathFound(res);
+    algThread.startThread(algIndex, ui->mapWidget->graph, start, end, isBidirectional, isParallel);
+//    res = Algorithms::findPath(algIndex, ui->mapWidget->graph, start, end, isBidirectional, isParallel);
+//    emit pathFound(res);
 }
 
 void MainWindow::updateLabelsUponResultGetsFound(const AlgResult *r) {
@@ -186,6 +189,7 @@ void MainWindow::fileOpen() {
         graph->read_binary(filename.toStdString());
         ui->mapWidget->setGraph(graph);
         current_filename = filename.toStdString();
+        dropResultLabels();
     }
 }
 
