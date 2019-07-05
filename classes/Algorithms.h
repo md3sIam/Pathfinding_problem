@@ -43,7 +43,9 @@ private:
 public:
     enum Algorithm {DIJKSTRA = 0, DIJKSTRA_WITH_STOP, ASTAR};
 
-    static const AlgResult* findPath(int alg, const Graph* g, Vertex* start, Vertex* end, bool bidirectional = false, bool parallel = false);
+    static const AlgResult* findPath(int alg, const Graph* g,
+            Vertex* start, Vertex* end,
+            bool bidirectional = false, bool parallel = false);
 };
 
 

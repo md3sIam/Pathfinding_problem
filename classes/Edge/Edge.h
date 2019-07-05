@@ -1,14 +1,14 @@
 #pragma once
 
 #include <string>
+#include <classes/GraphItem.h>
 
 class Vertex;
 
-class Edge {
+class Edge : public GraphItem{
 
 private:
     static unsigned long max_id;
-    unsigned long id;
     Vertex *vFrom;
     Vertex *vTo;
     double weight;
@@ -25,7 +25,7 @@ public:
     Edge& operator=(Edge &&e) noexcept;
     ~Edge();
 
-    std::string get_info();
+    std::string get_info() const override;
 
     friend class Graph;
     friend class CustomOpenGLWidget;

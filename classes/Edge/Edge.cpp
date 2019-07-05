@@ -8,24 +8,22 @@
 unsigned long Edge::max_id = 0;
 
 Edge::Edge(unsigned long id, Vertex *from, Vertex *to, long double weight):
-                        id(id), vFrom(from), vTo(to), weight(weight) {
+                        GraphItem(id), vFrom(from), vTo(to), weight(weight) {
     max_id++;
 }
 
 Edge::Edge(Vertex *from, Vertex *to, long double weight):
-        id(max_id), vFrom(from), vTo(to), weight(weight) {
+        GraphItem(max_id), vFrom(from), vTo(to), weight(weight) {
     max_id++;
 }
 
-Edge::Edge(const Edge &e) {
-    id = e.id;
+Edge::Edge(const Edge &e) : GraphItem(e.id){
     vFrom = e.vFrom;
     vTo = e.vTo;
     weight = e.weight;
 }
 
-Edge::Edge(Edge &&e) noexcept {
-    id = e.id;
+Edge::Edge(Edge &&e) noexcept : GraphItem(e.id){
     vFrom = e.vFrom;
     vTo = e.vTo;
     weight = e.weight;
@@ -60,7 +58,7 @@ std::tuple<unsigned long, long, long, long double> Edge::get_edge_info_from_csv_
     return std::make_tuple(id, idFrom, idTo, weight);
 }
 
-std::string Edge::get_info() {
+std::string Edge::get_info() const {
     std::string info;
 
     info += std::string("From: ") + std::to_string(vFrom->id);

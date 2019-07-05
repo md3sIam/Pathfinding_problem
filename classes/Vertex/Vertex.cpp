@@ -9,20 +9,19 @@
 
 long Vertex::last_created_id = 0;
 
-Vertex::Vertex(long id, double x, double y): id(id), lon(x), lat(y) {
+Vertex::Vertex(unsigned long id, double x, double y): GraphItem(id), lon(x), lat(y) {
     //printf("Vertex with id %ld created", id);
+    this->id = id;
 };
 
-Vertex::Vertex(Vertex const &v){
-    id = v.id;
+Vertex::Vertex(Vertex const &v): GraphItem(v.id){
     lon = v.lon;
     lat = v.lat;
     incidentEdges = v.incidentEdges;
     printf("Vertex with id %ld created", id);
 }
 
-Vertex::Vertex(Vertex && v) noexcept {
-    id = v.id;
+Vertex::Vertex(Vertex && v) noexcept : GraphItem(v.id) {
     lon = v.lon;
     lat = v.lat;
     incidentEdges = v.incidentEdges;
@@ -62,7 +61,7 @@ Vertex* Vertex::get_vertex_from_csv_string(const std::string &str) {
     CSVUtil::csv_to_cpp_fp(vector[1]);
     CSVUtil::csv_to_cpp_fp(vector[2]);
 
-    long id = std::stol(vector[0]);
+    unsigned long id = std::stoul(vector[0]);
     double x = std::stod(vector[2]);
     double y = std::stod(vector[1]);
 

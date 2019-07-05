@@ -16,7 +16,7 @@ set(GRAPH_CPP classes/Graph/Graph.cpp)
 
 # Utils
 set(CSVUTIL_CPP classes/Utilities/CSVUtil/CSVUtil.cpp)
-set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp)
+set(SHADERLOADER_CPP classes/Utilities/ShaderLoader/ShaderLoader.cpp classes/GraphItem.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_EXE}
         ${VERTEX_CPP}
