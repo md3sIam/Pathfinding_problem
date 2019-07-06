@@ -10,6 +10,7 @@
 #include <cmath>
 #include "DefaultGuiSettings.h"
 #include <QThread>
+#include <classes/Exceptions.h>
 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -19,12 +20,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setMinimumWidth(1024);
     setMinimumHeight(768);
 
-    //Reading ans setting the graph
-    graph = new Graph;
-    current_filename = dgs::defaultMap;
-    graph->read_binary(current_filename);
-    std::cout << "Graph is read\n";
-    ui->mapWidget->setGraph(graph);
     connect(ui->mapWidget, SIGNAL(enableToSearchPath(bool)), ui->search_button, SLOT(setEnabled(bool)));
 
     //Setting up actions for toolbar
@@ -116,6 +111,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     ui->caColorChooser->setStr("Common Search Area Color");
     ui->caColorChooser->setColor(dgs::commonSearchAreaColor);
     connect(ui->caColorChooser, SIGNAL(colorChanged(QColor)), ui->mapWidget, SLOT(caColorChanged(QColor)));
+
+    //Reading ans setting the graph
+    graph = new Graph;
+
+    try {
+        current_filename = dgs::defaultMap;
+        graph->read_binary(current_filename);
+    }
+    catch(FileNotOpenedException &e){
+        current_filename = "";
+        std::cout << e.what() << std::endl;
+    }
+
+    std::cout << "Graph is read\n";
+    ui->mapWidget->setGraph(graph);
 }
 
 MainWindow::~MainWindow() {
@@ -166,8 +176,8 @@ void MainWindow::updateLabelsUponResultGetsFound(const AlgResult *r) {
 }
 
 void MainWindow::dropResultLabels() {
-    ui->time_result_label->setText("N/A");
-    ui->length_result_label->setText("N/A");
+    ui->time_result_label->setText("-");
+    ui->length_result_label->setText("-");
 }
 
 QOpenGLWidget* MainWindow::getOpenGLContext() {

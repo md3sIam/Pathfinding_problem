@@ -14,6 +14,8 @@ public:
     virtual std::string get_info() const =0;
 public:
     explicit GraphItem(unsigned long id): id(id){};
+
+    friend class Graph;
 };
 
 #endif //PATHFINDING_PROBLEM_GRAPHITEM_H

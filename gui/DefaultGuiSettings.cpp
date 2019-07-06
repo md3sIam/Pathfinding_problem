@@ -3,7 +3,7 @@
 //
 #include "DefaultGuiSettings.h"
 
-const std::string dgs::defaultMap = "../maps/binaries/sbp3_test.graph";
+const std::string dgs::defaultMap = "../maps/binaries/ny_test.graph";
 const QColor dgs::vertexColor = {255, 255, 255};
 const QColor dgs::edgeColor = {255, 255, 255};
 const QColor dgs::selectedVertexColor = {0, 78, 255};

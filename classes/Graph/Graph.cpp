@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <classes/Exceptions.h>
 #include "Graph.h"
 #include "../Vertex/Vertex.h"
 #include "../Edge/Edge.h"
@@ -277,7 +278,9 @@ void Graph::read_binary(const std::string &filename) {
     file.open(filename, std::ios::in | std::ios::binary);
 
     if (!file.is_open()){
-        throw std::runtime_error("Binary file is not opened");
+        std::string msg;
+        msg = "File \"" + filename + "\" is unavailable";
+        throw FileNotOpenedException(msg.c_str());
     }
 
     char memblock[sizeof(long) + 2 * sizeof(double)];
@@ -331,7 +334,9 @@ void Graph::save_to_binary(const std::string &filename) {
     std::ofstream file;
     file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
     if (!file.is_open()){
-        throw std::runtime_error("Binary file was not opened to write graph");
+        std::string msg;
+        msg = "File \"" + filename + "\" is unavailable";
+        throw FileNotOpenedException(msg.c_str());
     }
 
     //Writing vertices

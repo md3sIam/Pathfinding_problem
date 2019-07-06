@@ -13,6 +13,8 @@
 #include <vector>
 #include <fstream>
 #include <QPushButton>
+#include <classes/Exceptions.h>
+#include <QtWidgets/QMessageBox>
 
 CustomOpenGLWidget::CustomOpenGLWidget(QWidget *parent)
         : QOpenGLWidget(parent), zoom(dgs::zoom), shiftX(dgs::shiftX), shiftY(dgs::shiftY), graph(nullptr),
@@ -103,7 +105,6 @@ CustomOpenGLWidget::~CustomOpenGLWidget()
 }
 
 void CustomOpenGLWidget::setGraph(Graph *g) {
-    restoreDefaultView();
     edgeHandler["Core"].clear();
     vertexHandler["Core"].clear();
     vertexHandler["Selected"].clear();
@@ -115,9 +116,9 @@ void CustomOpenGLWidget::setGraph(Graph *g) {
         vertexHandler.addToType("Core", pair.second);
     for (std::pair<const unsigned long, Edge*>& pair : g->edges)
         edgeHandler.addToType("Core", pair.second);
-//    prepareAllEdgesToDraw();
-    //prepareAllVerticesToDraw();
-    update();
+
+
+    restoreDefaultView();
     emit amountsChanged(graph->vertices.size(),
                         graph->edges.size(),
                         vertexHandler["Selected"].getSize()/*selectedVertices.size()*/,
@@ -150,27 +151,33 @@ void CustomOpenGLWidget::initializeGL()
                         edgeHandler["Selected"].getSize());
     mtb->setGeometry(width() - 400, height() - 40, 400, 40);
     vertexSizeSlider->setGeometry(width() - 20, 5, 0, 0);
-    edge_default_shader_program = load_shaders(
-            "../shaders/v2/edges_vertex_const_color_shader.glsl",
-            "../shaders/v2/edges_fragment_const_color_shader.glsl"
-            );
-    vertex_default_shader_program = load_shaders(
-            "../shaders/v2/vertices_vertex_const_color_shader.glsl",
-            "../shaders/v2/vertices_fragment_const_color_shader.glsl",
-            "../shaders/v2/vertices_geom_const_color_shader.glsl");
-    wider_edge_shader_program = load_shaders(
-            "../shaders/wide_edge_shaders/wide_edge_vertex_shader.glsl",
-            "../shaders/wide_edge_shaders/wide_edge_fragment_shader.glsl",
-            "../shaders/wide_edge_shaders/wide_edge_geom_shader.glsl"
-            );
+    try {
+        edge_default_shader_program = load_shaders(
+                "../shaders/v2/edges_vertex_const_color_shader.glsl",
+                "../shaders/v2/edges_fragment_const_color_shader.glsl"
+        );
+        vertex_default_shader_program = load_shaders(
+                "../shaders/v2/vertices_vertex_const_color_shader.glsl",
+                "../shaders/v2/vertices_fragment_const_color_shader.glsl",
+                "../shaders/v2/vertices_geom_const_color_shader.glsl");
+        wider_edge_shader_program = load_shaders(
+                "../shaders/wide_edge_shaders/wide_edge_vertex_shader.glsl",
+                "../shaders/wide_edge_shaders/wide_edge_fragment_shader.glsl",
+                "../shaders/wide_edge_shaders/wide_edge_geom_shader.glsl"
+        );
+    }
+    catch(ShaderNotLoadedException &e){
+        QMessageBox::warning(this->parentWidget(), tr("Error"),
+                tr(e.what()));
+        abort();
+    }
 
-    makeCurrent();
-    initialWidth = width();
-    initialHeight = height();
 }
 
 void CustomOpenGLWidget::paintGL()
 {
+    initialHeight = height();
+    initialWidth = width();
     auto f = QOpenGLContext::currentContext()->functions();
     f->glClear(GL_COLOR_BUFFER_BIT);
 
@@ -282,7 +289,7 @@ QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(const std::string& vs_pat
         vertexShaderCode = sstr.str().c_str();
         vs_stream.close();
     } else {
-        throw std::runtime_error("Cannot open vertex shader code");
+        throw ShaderNotLoadedException("Cannot open vertex shader code");
     }
 
     QOpenGLShader v_shader(QOpenGLShader::Vertex);
@@ -307,7 +314,7 @@ QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(const std::string& vs_pat
             gs_stream.close();
         } else {
             std::cout << gs_path << std::endl;
-            throw std::runtime_error("Cannot open geometry shader code");
+            throw ShaderNotLoadedException("Cannot open geometry shader code");
         }
 
         //compile vertex shader
@@ -327,7 +334,7 @@ QOpenGLShaderProgram* CustomOpenGLWidget::load_shaders(const std::string& vs_pat
         sstr << fs_stream.rdbuf();
         fragmentShaderCode = sstr.str().c_str();
     } else {
-        throw std::runtime_error("Cannot open fragment shader source code");
+        throw ShaderNotLoadedException("Cannot open fragment shader source code");
     }
 
     QOpenGLShader f_shader(QOpenGLShader::Fragment);
